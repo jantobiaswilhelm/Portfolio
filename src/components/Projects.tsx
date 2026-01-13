@@ -5,6 +5,8 @@ const projects = [
   {
     title: 'Lutem',
     tagline: '"Headspace meets Steam"',
+    year: '2025',
+    current: true,
     description: 'AI-powered gaming recommendation platform that matches your mood to the perfect game. Built as part of my Master\'s coursework with startup potential.',
     stack: ['React', 'TypeScript', 'Spring Boot', 'Firebase', 'PostgreSQL', 'Tailwind'],
     live: 'https://lutemweb.netlify.app',
@@ -16,6 +18,8 @@ const projects = [
   {
     title: 'FHNW SQL Scrolls',
     tagline: 'Gamified SQL learning',
+    year: '2023',
+    current: false,
     description: 'Contributed to this gamified SQL learning platform during my Bachelor thesis. My focus: documentation, Docker deployment, content additions, UI refinement, and bugfixing.',
     stack: ['JavaScript', 'Node.js', 'MongoDB', 'Python ML', 'Docker'],
     github: 'https://github.com/fhnw-sql/FHNW-SQLScrolls',
@@ -46,7 +50,11 @@ export default function Projects() {
               <div className="pl-6">
                 <div className="flex flex-col md:flex-row md:justify-between md:items-start gap-4 mb-4">
                   <div>
-                    <h3 className="text-2xl font-bold text-text-primary group-hover:text-accent transition-colors">{project.title}</h3>
+                    <div className="flex items-center gap-3 mb-1">
+                      <h3 className="text-2xl font-bold text-text-primary group-hover:text-accent transition-colors">{project.title}</h3>
+                      <span className="text-sm font-mono text-text-muted">{project.year}</span>
+                      {project.current && <span className="px-2 py-0.5 text-xs bg-accent/20 text-accent rounded-full">Active</span>}
+                    </div>
                     <p className="text-accent italic">{project.tagline}</p>
                   </div>
                   <div className="flex flex-wrap gap-2">

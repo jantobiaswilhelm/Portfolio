@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion'
-import { Briefcase, GraduationCap, Award, Rocket } from 'lucide-react'
+import { Briefcase, GraduationCap, Award } from 'lucide-react'
 
 const techStack = ['React', 'TypeScript', 'JavaScript', 'Node.js', 'Spring Boot', 'Python', 'Tailwind CSS', 'PostgreSQL', 'MongoDB', 'Firebase', 'Docker', 'Git', 'Figma', 'BPMN', 'UML', 'ERD', 'MS Office']
 
@@ -9,11 +9,9 @@ const certifications = [
 ]
 
 const timeline = [
-  { year: '2025', title: 'Lutem — AI Gaming Recommendations', type: 'project', current: true },
   { year: '2025', title: 'Support Hero @ twio.tech', type: 'work', current: true },
   { year: '2024-2027', title: 'MSc Business Information Systems @ FHNW', type: 'edu', current: true },
   { year: '2024', title: 'Zivildienst WBZ', type: 'work', current: false },
-  { year: '2023', title: 'SQL Scrolls — Bachelor Thesis', type: 'project', current: false },
   { year: '2019-2023', title: 'BSc Business Information Technology @ FHNW', type: 'edu', current: false },
   { year: '2020', title: 'Exchange @ Erhvervsakademiet Aarhus', type: 'edu', current: false },
   { year: '2018-2019', title: 'Lehrerassistent @ HPS Liestal (Zivildienst)', type: 'work', current: false },
@@ -65,10 +63,10 @@ export default function Skills() {
               <div className="absolute left-[5px] top-2 bottom-2 w-0.5 bg-gradient-to-b from-accent via-accent/30 to-transparent" />
               {timeline.map((item, i) => (
                 <motion.div key={i} initial={{ opacity: 0, x: 10 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.08 }} className="flex gap-4 items-start pl-6 relative">
-                  <div className={`absolute left-0 top-1.5 w-3 h-3 rounded-full border-2 ${item.current ? 'bg-accent border-accent' : (item.type === 'work' || item.type === 'project') ? 'bg-bg-darkest border-accent' : 'bg-bg-darkest border-text-muted'}`} />
+                  <div className={`absolute left-0 top-1.5 w-3 h-3 rounded-full border-2 ${item.current ? 'bg-accent border-accent' : item.type === 'work' ? 'bg-bg-darkest border-accent' : 'bg-bg-darkest border-text-muted'}`} />
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-1">
-                      {item.type === 'work' ? <Briefcase size={14} className="text-accent" /> : item.type === 'project' ? <Rocket size={14} className="text-accent" /> : <GraduationCap size={14} className="text-text-muted" />}
+                      {item.type === 'work' ? <Briefcase size={14} className="text-accent" /> : <GraduationCap size={14} className="text-text-muted" />}
                       <span className={`text-sm font-mono ${item.current ? 'text-accent' : 'text-text-muted'}`}>{item.year}</span>
                       {item.current && <span className="px-2 py-0.5 text-xs bg-accent/20 text-accent rounded-full">Current</span>}
                     </div>
