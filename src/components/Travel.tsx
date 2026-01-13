@@ -116,7 +116,11 @@ export default function Travel() {
               projectionConfig={{ scale: 120, center: [10, 45] }}
               style={{ width: '100%', height: '500px' }}
             >
-              <ZoomableGroup>
+              <ZoomableGroup
+                minZoom={1}
+                maxZoom={5}
+                translateExtent={[[-100, -50], [900, 550]]}
+              >
                 <Geographies geography={geoUrl}>
                   {({ geographies }) =>
                     geographies.map((geo) => {
