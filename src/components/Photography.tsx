@@ -4,7 +4,7 @@ import { Camera, X, ChevronLeft, ChevronRight } from 'lucide-react'
 import photosData from '../data/photos.json'
 
 type Photo = { src: string; category: string; alt: string }
-const photos: Photo[] = photosData
+const photos: Photo[] = photosData.map(p => ({ ...p, src: `${import.meta.env.BASE_URL}${p.src.slice(1)}` }))
 
 const categories = ['all', ...Array.from(new Set(photos.map(p => p.category)))]
 

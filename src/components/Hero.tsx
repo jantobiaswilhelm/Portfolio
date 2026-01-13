@@ -11,7 +11,7 @@ export default function Hero() {
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }} className="text-center px-6 relative z-10">
         <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.2, duration: 0.6 }} className="mb-8">
           <div className="w-32 h-32 mx-auto rounded-full overflow-hidden border-2 border-accent/50 shadow-lg shadow-accent/20">
-            <img src="/images/profile.png" alt="Jan Wilhelm" className="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-500" />
+            <img src={`${import.meta.env.BASE_URL}images/profile.png`} alt="Jan Wilhelm" className="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-500" />
           </div>
         </motion.div>
         <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.3, duration: 0.5 }} className="mb-4">

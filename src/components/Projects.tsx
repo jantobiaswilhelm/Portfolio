@@ -9,7 +9,7 @@ const projects = [
     stack: ['React', 'TypeScript', 'Spring Boot', 'Firebase', 'PostgreSQL', 'Tailwind'],
     live: 'https://lutemweb.netlify.app',
     github: 'https://github.com/jantobiaswilhelm/LutemPrototype',
-    document: '/docs/lutem-project.pdf',
+    document: 'docs/lutem-project.pdf',
     highlights: ['Multi-dimensional recommendation engine', 'Steam library integration', '4 themes × 2 modes design system'],
     featured: true,
   },
@@ -69,7 +69,7 @@ export default function Projects() {
                       </a>
                     )}
                     {project.document && (
-                      <a href={project.document} download className="flex items-center gap-2 px-3 py-2 border border-border rounded-lg text-text-secondary hover:border-accent hover:text-accent transition-all text-sm">
+                      <a href={`${import.meta.env.BASE_URL}${project.document}`} download className="flex items-center gap-2 px-3 py-2 border border-border rounded-lg text-text-secondary hover:border-accent hover:text-accent transition-all text-sm">
                         <FileText size={14} />PDF
                       </a>
                     )}
