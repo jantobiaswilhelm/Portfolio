@@ -9,9 +9,9 @@ const certifications = [
 ]
 
 const international = [
-  { country: 'China', code: 'CN', year: '2025', type: 'Field Trip' },
-  { country: 'Denmark', code: 'DK', year: '2020', type: 'Exchange Semester' },
-  { country: 'UK', code: 'GB', year: '2017', type: 'Language Stay' },
+  { country: 'China', code: 'cn', city: 'Greater Bay Area', year: '2025', type: 'Field Trip' },
+  { country: 'Denmark', code: 'dk', city: 'Aarhus', year: '2020', type: 'Exchange Semester' },
+  { country: 'UK', code: 'gb', city: 'Cambridge', year: '2017', type: 'Language Stay' },
 ]
 
 const timeline = [
@@ -67,8 +67,8 @@ export default function Skills() {
               <div className="grid grid-cols-3 gap-3">
                 {international.map((item, i) => (
                   <motion.div key={i} initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: 0.4 + i * 0.1 }} className="bg-bg-card border border-border rounded-lg p-3 text-center hover:border-accent/50 transition-colors">
-                    <span className="text-accent font-bold text-lg block mb-1">{item.code}</span>
-                    <span className="text-text-primary text-sm font-medium block">{item.country}</span>
+                    <img src={`https://flagcdn.com/w40/${item.code}.png`} alt={item.country} className="w-8 h-6 object-cover rounded mx-auto mb-2" />
+                    <span className="text-text-primary text-sm font-medium block">{item.city}</span>
                     <span className="text-text-muted text-xs block">{item.type}</span>
                     <span className="text-accent text-xs">{item.year}</span>
                   </motion.div>
