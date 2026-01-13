@@ -1,11 +1,17 @@
 import { motion } from 'framer-motion'
-import { Briefcase, GraduationCap, Award } from 'lucide-react'
+import { Briefcase, GraduationCap, Award, Globe } from 'lucide-react'
 
 const techStack = ['React', 'TypeScript', 'JavaScript', 'Node.js', 'Spring Boot', 'Python', 'Tailwind CSS', 'PostgreSQL', 'MongoDB', 'Firebase', 'Docker', 'Git', 'Figma', 'BPMN', 'UML', 'ERD', 'MS Office']
 
 const certifications = [
   { name: 'Cambridge FIRST', level: 'Grade A (C1)', year: '2017', lang: 'English' },
   { name: 'DELF B1', level: 'B2 Exam', year: '2015', lang: 'French' },
+]
+
+const international = [
+  { country: 'China', flag: '🇨🇳', year: '2025', type: 'Field Trip' },
+  { country: 'Denmark', flag: '🇩🇰', year: '2020', type: 'Exchange Semester' },
+  { country: 'Cambridge', flag: '🇬🇧', year: '2017', type: 'Language Stay' },
 ]
 
 const timeline = [
@@ -52,6 +58,19 @@ export default function Skills() {
                       <span className="text-accent text-sm">{cert.level}</span>
                       <span className="text-text-muted text-xs ml-2">{cert.year}</span>
                     </div>
+                  </motion.div>
+                ))}
+              </div>
+            </motion.div>
+            <motion.div initial={{ opacity: 0, x: -20 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ delay: 0.3 }}>
+              <h3 className="text-xl font-semibold text-accent mb-6 flex items-center gap-2"><Globe size={20} />International</h3>
+              <div className="grid grid-cols-3 gap-3">
+                {international.map((item, i) => (
+                  <motion.div key={i} initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: 0.4 + i * 0.1 }} className="bg-bg-card border border-border rounded-lg p-3 text-center hover:border-accent/50 transition-colors">
+                    <span className="text-2xl block mb-1">{item.flag}</span>
+                    <span className="text-text-primary text-sm font-medium block">{item.country}</span>
+                    <span className="text-text-muted text-xs block">{item.type}</span>
+                    <span className="text-accent text-xs">{item.year}</span>
                   </motion.div>
                 ))}
               </div>
