@@ -34,13 +34,10 @@ export default function About() {
                   Passionate about bridging the gap between business and tech.
                 </p>
                 <p>
-                  My background spans <span className="text-accent">full-stack development</span>, process modeling (BPMN/UML), 
-                  and a semester abroad in <span className="text-text-primary">Denmark</span>. I love building tools that make 
-                  complex things simple — whether that's gamifying SQL learning or matching gamers with their perfect game.
+                  What started as talking about business innovations quickly turned into <span className="text-accent">"why don't I just build this myself."</span> Turns out I like making things more than planning them. Especially when it solves my own problems.
                 </p>
                 <p>
-                  Outside of code, I shoot street photography on my <span className="text-accent">Fujifilm</span>, 
-                  game way too much, and constantly hunt for the best coffee in Basel.
+                  Outside of code, I shoot street photography on my <span className="text-accent">Fujifilm</span> and game way too much.
                 </p>
               </div>
 
