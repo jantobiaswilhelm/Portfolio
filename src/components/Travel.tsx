@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
+// @ts-ignore
 import { ComposableMap, Geographies, Geography, ZoomableGroup } from 'react-simple-maps'
 import { Plane, MapPin } from 'lucide-react'
 
@@ -73,7 +74,7 @@ export default function Travel() {
   const [tooltip, setTooltip] = useState<{ name: string; year: string } | null>(null)
   const [tooltipPos, setTooltipPos] = useState({ x: 0, y: 0 })
 
-  const handleMouseEnter = (geo: any, evt: React.MouseEvent) => {
+  const handleMouseEnter = (geo: any, evt: any) => {
     const geoName = geo.properties.name
     const country = visitedCountries[geoName]
     if (country) {
@@ -122,8 +123,8 @@ export default function Travel() {
                 maxZoom={5}
               >
                 <Geographies geography={geoUrl}>
-                  {({ geographies }) =>
-                    geographies.map((geo) => {
+                  {({ geographies }: { geographies: any[] }) =>
+                    geographies.map((geo: any) => {
                       const geoName = geo.properties.name
                       const countryData = visitedCountries[geoName]
                       const isVisited = !!countryData
@@ -144,7 +145,7 @@ export default function Travel() {
                         <Geography
                           key={geo.rsmKey}
                           geography={geo}
-                          onMouseEnter={(evt) => handleMouseEnter(geo, evt)}
+                          onMouseEnter={(evt: any) => handleMouseEnter(geo, evt)}
                           onMouseLeave={handleMouseLeave}
                           style={{
                             default: {
