@@ -1,18 +1,36 @@
 import { useState, useEffect } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion } from 'framer-motion'
 import { ChevronDown, ExternalLink, Sparkles } from 'lucide-react'
 
 const roles = ['Developer', 'Photographer', 'MSc Student', 'Gamer']
 
 export default function Hero() {
+  const [text, setText] = useState('')
   const [roleIndex, setRoleIndex] = useState(0)
+  const [isDeleting, setIsDeleting] = useState(false)
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      setRoleIndex((i) => (i + 1) % roles.length)
-    }, 2500)
-    return () => clearInterval(interval)
-  }, [])
+    const currentRole = roles[roleIndex]
+    
+    const timeout = setTimeout(() => {
+      if (!isDeleting) {
+        if (text.length < currentRole.length) {
+          setText(currentRole.slice(0, text.length + 1))
+        } else {
+          setTimeout(() => setIsDeleting(true), 2000)
+        }
+      } else {
+        if (text.length > 0) {
+          setText(text.slice(0, -1))
+        } else {
+          setIsDeleting(false)
+          setRoleIndex((i) => (i + 1) % roles.length)
+        }
+      }
+    }, isDeleting ? 50 : 80)
+
+    return () => clearTimeout(timeout)
+  }, [text, isDeleting, roleIndex])
 
   return (
     <section className="min-h-screen flex flex-col justify-center items-center relative overflow-hidden">
@@ -27,13 +45,11 @@ export default function Hero() {
           </div>
         </motion.div>
         
-        {/* Animated role */}
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }} className="mb-4 h-7 overflow-hidden">
-          <AnimatePresence mode="wait">
-            <motion.span key={roleIndex} initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: -20, opacity: 0 }} transition={{ duration: 0.3 }} className="text-accent font-medium tracking-widest uppercase text-sm block">
-              {roles[roleIndex]}
-            </motion.span>
-          </AnimatePresence>
+        {/* Typewriter role */}
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }} className="mb-4 h-7 flex justify-center items-center">
+          <span className="text-accent font-medium tracking-widest uppercase text-sm font-mono">
+            [ {text}<span className="animate-pulse">|</span> ]
+          </span>
         </motion.div>
 
         <h1 className="text-5xl md:text-7xl font-bold text-text-primary mb-6">Jan <span className="text-accent">Wilhelm</span></h1>
