@@ -28,6 +28,16 @@ const projects = [
     highlights: ['AI-based task recommendation', 'Used in FHNW teaching', 'Full Docker deployment'],
     featured: false,
   },
+  {
+    title: 'Business Process Digitalization Guide',
+    tagline: 'Process optimization consulting',
+    year: '2022',
+    current: false,
+    description: 'Practical project at FHNW developing a structured guide for digitalizing business processes. Analyzed workflows, identified inefficiencies, and proposed concrete improvement measures.',
+    stack: ['BPMN', 'UML', 'Process Modeling', 'Requirements Engineering'],
+    highlights: ['As-is / To-be process modeling', 'Potential analysis for inefficiencies', 'Digitalization roadmap', 'Media break reduction strategies'],
+    featured: false,
+  },
 ]
 
 export default function Projects() {
@@ -68,9 +78,11 @@ export default function Projects() {
                         <Play size={14} />Intro
                       </a>
                     )}
-                    <a href={project.github} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 px-3 py-2 border border-border rounded-lg text-text-secondary hover:border-accent hover:text-accent transition-all text-sm">
-                      <Github size={14} />Code
-                    </a>
+                    {project.github && (
+                      <a href={project.github} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 px-3 py-2 border border-border rounded-lg text-text-secondary hover:border-accent hover:text-accent transition-all text-sm">
+                        <Github size={14} />Code
+                      </a>
+                    )}
                     {project.publication && (
                       <a href={project.publication} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 px-3 py-2 border border-border rounded-lg text-text-secondary hover:border-accent hover:text-accent transition-all text-sm">
                         <BookOpen size={14} />Paper
