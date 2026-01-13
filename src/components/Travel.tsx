@@ -5,43 +5,77 @@ import { Plane, MapPin } from 'lucide-react'
 
 const geoUrl = 'https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json'
 
-const visitedCountries = [
-  { code: 'MCO', name: 'Monaco', year: '2017' },
-  { code: 'FRA', name: 'France', year: 'Multiple' },
-  { code: 'DEU', name: 'Germany', year: 'Multiple' },
-  { code: 'ISL', name: 'Iceland', year: '2018' },
-  { code: 'USA', name: 'USA', year: '2019' },
-  { code: 'THA', name: 'Thailand', year: '2019' },
-  { code: 'SGP', name: 'Singapore', year: '2019' },
-  { code: 'HKG', name: 'Hong Kong', year: '2019' },
-  { code: 'ITA', name: 'Italy', year: '2020' },
-  { code: 'NLD', name: 'Netherlands', year: '2020' },
-  { code: 'DNK', name: 'Denmark', year: '2020' },
-  { code: 'SWE', name: 'Sweden', year: '2021' },
-  { code: 'CRI', name: 'Costa Rica', year: '2024' },
-  { code: 'POL', name: 'Poland', year: '2025' },
-  { code: 'CZE', name: 'Czech Republic', year: '2025' },
-  { code: 'PRT', name: 'Portugal', year: '2024' },
-  { code: 'CHN', name: 'China', year: '2025' },
-  { code: 'AUT', name: 'Austria', year: '2021' },
-  { code: 'HRV', name: 'Croatia', year: '2017' },
-  { code: 'BEL', name: 'Belgium', year: '2020' },
-  { code: 'GBR', name: 'UK', year: '2016, 2017' },
-  { code: 'NOR', name: 'Norway', year: '2011' },
-  { code: 'FIN', name: 'Finland', year: '2013' },
-  { code: 'TUN', name: 'Tunisia', year: '2014' },
-  { code: 'HUN', name: 'Hungary', year: '2019' },
-  { code: 'CHE', name: 'Switzerland', year: 'Home' },
+// Map uses geo.properties.name - we need to match those exact names
+const visitedCountries: Record<string, { name: string; year: string; isHome?: boolean }> = {
+  'Monaco': { name: 'Monaco', year: '2017' },
+  'France': { name: 'France', year: 'Multiple' },
+  'Germany': { name: 'Germany', year: 'Multiple' },
+  'Iceland': { name: 'Iceland', year: '2018' },
+  'United States of America': { name: 'USA', year: '2019' },
+  'Thailand': { name: 'Thailand', year: '2019' },
+  'Singapore': { name: 'Singapore', year: '2019' },
+  'Italy': { name: 'Italy', year: '2020' },
+  'Netherlands': { name: 'Netherlands', year: '2020' },
+  'Denmark': { name: 'Denmark', year: '2020' },
+  'Sweden': { name: 'Sweden', year: '2021' },
+  'Costa Rica': { name: 'Costa Rica', year: '2024' },
+  'Poland': { name: 'Poland', year: '2025' },
+  'Czechia': { name: 'Czech Republic', year: '2025' },
+  'Portugal': { name: 'Portugal', year: '2024' },
+  'China': { name: 'China', year: '2025' },
+  'Austria': { name: 'Austria', year: '2021' },
+  'Croatia': { name: 'Croatia', year: '2017' },
+  'Belgium': { name: 'Belgium', year: '2020' },
+  'United Kingdom': { name: 'UK', year: '2016, 2017' },
+  'Norway': { name: 'Norway', year: '2011' },
+  'Finland': { name: 'Finland', year: '2013' },
+  'Tunisia': { name: 'Tunisia', year: '2014' },
+  'Hungary': { name: 'Hungary', year: '2019' },
+  'Greece': { name: 'Greece', year: '2014' },
+  'Spain': { name: 'Spain', year: '2016' },
+  'Switzerland': { name: 'Switzerland', year: 'Home', isHome: true },
+}
+
+// For the sidebar list
+const tripsList = [
+  { name: 'Monaco', year: '2017' },
+  { name: 'France', year: 'Multiple' },
+  { name: 'Germany', year: 'Multiple' },
+  { name: 'Iceland', year: '2018' },
+  { name: 'USA', year: '2019' },
+  { name: 'Thailand', year: '2019' },
+  { name: 'Singapore', year: '2019' },
+  { name: 'Hong Kong', year: '2019' },
+  { name: 'Italy', year: '2020' },
+  { name: 'Netherlands', year: '2020' },
+  { name: 'Denmark', year: '2020' },
+  { name: 'Sweden', year: '2021' },
+  { name: 'Costa Rica', year: '2024' },
+  { name: 'Poland', year: '2025' },
+  { name: 'Czech Republic', year: '2025' },
+  { name: 'Portugal', year: '2024' },
+  { name: 'China', year: '2025' },
+  { name: 'Austria', year: '2021' },
+  { name: 'Croatia', year: '2017' },
+  { name: 'Belgium', year: '2020' },
+  { name: 'UK', year: '2016, 2017' },
+  { name: 'Norway', year: '2011' },
+  { name: 'Finland', year: '2013' },
+  { name: 'Tunisia', year: '2014' },
+  { name: 'Hungary', year: '2019' },
+  { name: 'Greece', year: '2014' },
+  { name: 'Spain', year: '2016' },
 ]
 
-const visitedCodes = visitedCountries.map(c => c.code)
+const countryCount = tripsList.length + 1 // +1 for Switzerland (home)
 
 export default function Travel() {
   const [tooltip, setTooltip] = useState<{ name: string; year: string } | null>(null)
   const [tooltipPos, setTooltipPos] = useState({ x: 0, y: 0 })
 
   const handleMouseEnter = (geo: any, evt: React.MouseEvent) => {
-    const country = visitedCountries.find(c => c.code === geo.id)
+    const geoName = geo.properties.name
+    const country = visitedCountries[geoName]
     if (country) {
       setTooltip({ name: country.name, year: country.year })
       setTooltipPos({ x: evt.clientX, y: evt.clientY })
@@ -52,7 +86,7 @@ export default function Travel() {
     setTooltip(null)
   }
 
-  const sortedByYear = [...visitedCountries]
+  const sortedByYear = [...tripsList]
     .filter(c => c.year !== 'Home' && c.year !== 'Multiple')
     .sort((a, b) => {
       const yearA = parseInt(a.year.split(',')[0]) || 0
@@ -71,7 +105,7 @@ export default function Travel() {
         </motion.div>
         
         <p className="text-text-secondary mb-8">
-          <span className="text-accent font-bold text-2xl">{visitedCountries.length}</span> countries explored and counting.
+          <span className="text-accent font-bold text-2xl">{countryCount}</span> countries explored and counting.
         </p>
 
         <div className="grid lg:grid-cols-4 gap-8">
@@ -86,7 +120,22 @@ export default function Travel() {
                 <Geographies geography={geoUrl}>
                   {({ geographies }) =>
                     geographies.map((geo) => {
-                      const isVisited = visitedCodes.includes(geo.id)
+                      const geoName = geo.properties.name
+                      const countryData = visitedCountries[geoName]
+                      const isVisited = !!countryData
+                      const isHome = countryData?.isHome
+                      
+                      const getFill = () => {
+                        if (isHome) return '#ef4444' // red for home
+                        if (isVisited) return '#d4a853' // amber for visited
+                        return '#1a1a1a' // dark for unvisited
+                      }
+                      const getHoverFill = () => {
+                        if (isHome) return '#f87171' // lighter red
+                        if (isVisited) return '#e5b964' // lighter amber
+                        return '#252525'
+                      }
+                      
                       return (
                         <Geography
                           key={geo.rsmKey}
@@ -95,20 +144,20 @@ export default function Travel() {
                           onMouseLeave={handleMouseLeave}
                           style={{
                             default: {
-                              fill: isVisited ? '#d4a853' : '#1a1a1a',
+                              fill: getFill(),
                               stroke: '#333',
                               strokeWidth: 0.5,
                               outline: 'none',
                             },
                             hover: {
-                              fill: isVisited ? '#e5b964' : '#252525',
+                              fill: getHoverFill(),
                               stroke: '#444',
                               strokeWidth: 0.5,
                               outline: 'none',
                               cursor: isVisited ? 'pointer' : 'default',
                             },
                             pressed: {
-                              fill: isVisited ? '#d4a853' : '#1a1a1a',
+                              fill: getFill(),
                               outline: 'none',
                             },
                           }}
@@ -139,7 +188,7 @@ export default function Travel() {
             </h3>
             {sortedByYear.map((country, i) => (
               <motion.div 
-                key={country.code} 
+                key={country.name} 
                 initial={{ opacity: 0, x: 10 }} 
                 whileInView={{ opacity: 1, x: 0 }} 
                 viewport={{ once: true }} 
