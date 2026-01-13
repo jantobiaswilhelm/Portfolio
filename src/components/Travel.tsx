@@ -117,9 +117,9 @@ export default function Travel() {
               style={{ width: '100%', height: '500px' }}
             >
               <ZoomableGroup
+                center={[10, 45]}
                 minZoom={1}
                 maxZoom={5}
-                translateExtent={[[-100, -50], [900, 550]]}
               >
                 <Geographies geography={geoUrl}>
                   {({ geographies }) =>
