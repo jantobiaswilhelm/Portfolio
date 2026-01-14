@@ -59,7 +59,7 @@ export default function Hero() {
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }} className="flex justify-center gap-6 mb-10 text-sm">
           <div className="text-text-muted"><span className="text-accent font-bold text-lg">3</span> Projects</div>
           <div className="text-text-muted">•</div>
-          <div className="text-text-muted"><span className="text-accent font-bold text-lg">15+</span> Photos</div>
+          <div className="text-text-muted"><span className="text-accent font-bold text-lg">28</span> Countries</div>
           <div className="text-text-muted">•</div>
           <div className="text-text-muted"><span className="text-accent font-bold text-lg">MSc</span> Student</div>
         </motion.div>
