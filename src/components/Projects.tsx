@@ -1,5 +1,6 @@
-import { motion } from 'framer-motion'
-import { ExternalLink, Github, Sparkles, FileText, BookOpen, Play } from 'lucide-react'
+import { useState } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { ExternalLink, Github, Sparkles, FileText, BookOpen, Play, Image, X, ChevronLeft, ChevronRight } from 'lucide-react'
 
 const projects = [
   {
@@ -14,6 +15,12 @@ const projects = [
     document: 'docs/lutem-project.pdf',
     highlights: ['Multi-dimensional recommendation engine', 'Steam library integration', '4 themes × 2 modes design system'],
     featured: true,
+    // Add your screenshots here - place files in public/images/projects/
+    previews: [
+      { src: 'images/projects/lutem-1.png', caption: 'Mood selection interface' },
+      { src: 'images/projects/lutem-2.png', caption: 'Game recommendations' },
+      { src: 'images/projects/lutem-3.png', caption: 'Theme variants' },
+    ],
   },
   {
     title: 'SQL Scrolls Public Release',
@@ -27,6 +34,10 @@ const projects = [
     intro: 'https://studierendenprojekte.wirtschaft.fhnw.ch/view/2699',
     highlights: ['Extended game with new tasks & UI improvements', 'Simplified deployment via Docker', 'Migrated project from GitLab to GitHub', 'Created documentation & video tutorials', 'Test plan execution & bugfixing'],
     featured: false,
+    previews: [
+      { src: 'images/projects/sqlscrolls-1.png', caption: 'Game interface' },
+      { src: 'images/projects/sqlscrolls-2.png', caption: 'SQL challenge' },
+    ],
   },
   {
     title: 'Business Process Digitalization Guide',
@@ -37,10 +48,24 @@ const projects = [
     stack: ['BPMN', 'UML', 'Process Modeling', 'Requirements Engineering'],
     highlights: ['As-is / To-be process modeling', 'Potential analysis for inefficiencies', 'Digitalization roadmap', 'Media break reduction strategies'],
     featured: false,
+    previews: [], // No previews for this one
   },
 ]
 
+type Preview = { src: string; caption: string }
+
 export default function Projects() {
+  const [previewModal, setPreviewModal] = useState<{ previews: Preview[]; index: number } | null>(null)
+
+  const openPreview = (previews: Preview[]) => {
+    if (previews.length > 0) {
+      setPreviewModal({ previews, index: 0 })
+    }
+  }
+  const closePreview = () => setPreviewModal(null)
+  const prevImage = () => setPreviewModal(p => p ? { ...p, index: (p.index - 1 + p.previews.length) % p.previews.length } : null)
+  const nextImage = () => setPreviewModal(p => p ? { ...p, index: (p.index + 1) % p.previews.length } : null)
+
   return (
     <section id="projects" className="py-24 px-6 bg-bg-card/30">
       <div className="max-w-5xl mx-auto">
@@ -68,6 +93,15 @@ export default function Projects() {
                     <p className="text-accent italic">{project.tagline}</p>
                   </div>
                   <div className="flex flex-wrap gap-2">
+                    {/* Preview button - only show if previews exist */}
+                    {project.previews && project.previews.length > 0 && (
+                      <button 
+                        onClick={() => openPreview(project.previews)}
+                        className="flex items-center gap-2 px-3 py-2 bg-accent text-bg-darkest rounded-lg hover:bg-accent-hover transition-all text-sm font-medium"
+                      >
+                        <Image size={14} />Preview
+                      </button>
+                    )}
                     {project.live && (
                       <a href={project.live} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 px-3 py-2 bg-accent/10 border border-accent/30 rounded-lg text-accent hover:bg-accent/20 transition-all text-sm">
                         <ExternalLink size={14} />Live
@@ -109,6 +143,86 @@ export default function Projects() {
           ))}
         </div>
       </div>
+
+      {/* Preview Modal */}
+      <AnimatePresence>
+        {previewModal && (
+          <motion.div 
+            initial={{ opacity: 0 }} 
+            animate={{ opacity: 1 }} 
+            exit={{ opacity: 0 }} 
+            className="fixed inset-0 z-50 bg-bg-darkest/95 backdrop-blur-sm flex items-center justify-center p-6" 
+            onClick={closePreview}
+          >
+            <button onClick={closePreview} className="absolute top-6 right-6 text-text-secondary hover:text-accent transition-colors z-10">
+              <X size={32} />
+            </button>
+            
+            {previewModal.previews.length > 1 && (
+              <>
+                <button onClick={(e) => { e.stopPropagation(); prevImage() }} className="absolute left-6 text-text-secondary hover:text-accent transition-colors z-10">
+                  <ChevronLeft size={40} />
+                </button>
+                <button onClick={(e) => { e.stopPropagation(); nextImage() }} className="absolute right-6 text-text-secondary hover:text-accent transition-colors z-10">
+                  <ChevronRight size={40} />
+                </button>
+              </>
+            )}
+
+            <motion.div 
+              key={previewModal.index}
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="max-w-5xl w-full"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="relative rounded-xl overflow-hidden border border-border shadow-2xl">
+                <img 
+                  src={`${import.meta.env.BASE_URL}${previewModal.previews[previewModal.index].src}`}
+                  alt={previewModal.previews[previewModal.index].caption}
+                  className="w-full h-auto max-h-[75vh] object-contain bg-bg-card"
+                  onError={(e) => {
+                    e.currentTarget.src = ''
+                    e.currentTarget.alt = 'Screenshot not found'
+                    e.currentTarget.className = 'w-full h-64 flex items-center justify-center bg-bg-card text-text-muted'
+                  }}
+                />
+              </div>
+              
+              <div className="mt-4 text-center">
+                <p className="text-text-primary">{previewModal.previews[previewModal.index].caption}</p>
+                {previewModal.previews.length > 1 && (
+                  <p className="text-text-muted text-sm mt-1">
+                    {previewModal.index + 1} / {previewModal.previews.length}
+                  </p>
+                )}
+              </div>
+
+              {/* Thumbnail strip */}
+              {previewModal.previews.length > 1 && (
+                <div className="flex justify-center gap-2 mt-4">
+                  {previewModal.previews.map((preview, i) => (
+                    <button
+                      key={i}
+                      onClick={() => setPreviewModal(p => p ? { ...p, index: i } : null)}
+                      className={`w-16 h-12 rounded overflow-hidden border-2 transition-all ${
+                        i === previewModal.index ? 'border-accent' : 'border-border opacity-50 hover:opacity-100'
+                      }`}
+                    >
+                      <img 
+                        src={`${import.meta.env.BASE_URL}${preview.src}`}
+                        alt=""
+                        className="w-full h-full object-cover"
+                      />
+                    </button>
+                  ))}
+                </div>
+              )}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </section>
   )
 }
