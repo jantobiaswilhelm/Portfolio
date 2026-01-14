@@ -3,6 +3,7 @@ import { motion } from 'framer-motion'
 // @ts-ignore
 import { ComposableMap, Geographies, Geography, ZoomableGroup } from 'react-simple-maps'
 import { Plane, MapPin } from 'lucide-react'
+import { useTheme } from '../hooks/useTheme'
 
 const geoUrl = 'https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json'
 
@@ -73,6 +74,15 @@ const countryCount = tripsList.length + 1 // +1 for Switzerland (home)
 export default function Travel() {
   const [tooltip, setTooltip] = useState<{ name: string; year: string } | null>(null)
   const [tooltipPos, setTooltipPos] = useState({ x: 0, y: 0 })
+  const { isDark } = useTheme()
+
+  // Theme-aware colors
+  const colors = {
+    unvisited: isDark ? '#1a1a1a' : '#e8e4dc',
+    unvisitedHover: isDark ? '#252525' : '#ddd8ce',
+    stroke: isDark ? '#333' : '#ccc',
+    strokeHover: isDark ? '#444' : '#bbb',
+  }
 
   const handleMouseEnter = (geo: any, evt: any) => {
     const geoName = geo.properties.name
@@ -132,13 +142,13 @@ export default function Travel() {
                       
                       const getFill = () => {
                         if (isHome) return '#ef4444' // red for home
-                        if (isVisited) return '#d4a853' // amber for visited
-                        return '#1a1a1a' // dark for unvisited
+                        if (isVisited) return isDark ? '#d4a853' : '#b8942e' // amber for visited
+                        return colors.unvisited
                       }
                       const getHoverFill = () => {
                         if (isHome) return '#f87171' // lighter red
-                        if (isVisited) return '#e5b964' // lighter amber
-                        return '#252525'
+                        if (isVisited) return isDark ? '#e5b964' : '#c9a23a' // lighter amber
+                        return colors.unvisitedHover
                       }
                       
                       return (
@@ -150,13 +160,13 @@ export default function Travel() {
                           style={{
                             default: {
                               fill: getFill(),
-                              stroke: '#333',
+                              stroke: colors.stroke,
                               strokeWidth: 0.5,
                               outline: 'none',
                             },
                             hover: {
                               fill: getHoverFill(),
-                              stroke: '#444',
+                              stroke: colors.strokeHover,
                               strokeWidth: 0.5,
                               outline: 'none',
                               cursor: isVisited ? 'pointer' : 'default',

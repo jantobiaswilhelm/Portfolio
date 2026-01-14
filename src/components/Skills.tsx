@@ -1,7 +1,7 @@
 import { motion } from 'framer-motion'
 import { Briefcase, GraduationCap, Award, Globe } from 'lucide-react'
 
-const techStack = ['React', 'TypeScript', 'JavaScript', 'Node.js', 'Spring Boot', 'Python', 'Tailwind CSS', 'PostgreSQL', 'MongoDB', 'Firebase', 'Docker', 'Git', 'Figma', 'BPMN', 'UML', 'ERD', 'MS Office']
+const techStack = ['React', 'TypeScript', 'JavaScript', 'Node.js', 'Spring Boot', 'Python', 'Tailwind CSS', 'PostgreSQL', 'MongoDB', 'Firebase', 'Docker', 'Git', 'Figma', 'BPMN', 'UML', 'ERD']
 
 const certifications = [
   { name: 'Cambridge FIRST', level: 'Grade A (C1)', year: '2017', lang: 'English' },

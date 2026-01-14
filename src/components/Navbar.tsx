@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react'
+import ThemeToggle from './ThemeToggle'
 
 const navLinks = [
   { label: 'About', href: '#about' },
   { label: 'Projects', href: '#projects' },
   { label: 'Skills', href: '#skills' },
-  { label: 'Photography', href: '#photography' },
   { label: 'Travel', href: '#travel' },
+  { label: 'Photography', href: '#photography' },
   { label: 'Contact', href: '#contact' },
 ]
 
@@ -33,7 +34,7 @@ export default function Navbar() {
     <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled ? 'bg-bg-darkest/95 backdrop-blur-md border-b border-accent/20' : 'bg-transparent'}`}>
       <div className="max-w-6xl mx-auto px-6 py-4 flex justify-between items-center">
         <a href="#" className="text-xl font-bold text-accent hover:text-accent-hover transition-colors">JW<span className="text-text-primary">.</span></a>
-        <div className="flex gap-8">
+        <div className="flex items-center gap-8">
           {navLinks.map((link) => {
             const isActive = activeSection === link.href.slice(1)
             return (
@@ -43,6 +44,7 @@ export default function Navbar() {
               </a>
             )
           })}
+          <ThemeToggle />
         </div>
       </div>
     </nav>

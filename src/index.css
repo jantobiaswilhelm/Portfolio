@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 @theme {
-  /* Background colors */
+  /* Background colors - Dark Mode (Default) */
   --color-bg-darkest: #0a0a0a;
   --color-bg-card: #121212;
   --color-bg-hover: #1a1a1a;
@@ -20,6 +20,19 @@
   
   /* Fonts */
   --font-family-sans: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+/* Light Mode */
+:root.light {
+  --color-bg-darkest: #FAF8F5;
+  --color-bg-card: #FFFFFF;
+  --color-bg-hover: #F0EDE8;
+  --color-accent: #b8942e;
+  --color-accent-hover: #a6841f;
+  --color-text-primary: #1a1a1a;
+  --color-text-secondary: #5c5c5c;
+  --color-text-muted: #888888;
+  --color-border: #e8e4dc;
 }
 
 /* Base styles */
@@ -49,4 +62,17 @@ body {
 
 ::-webkit-scrollbar-thumb:hover {
   background: var(--color-text-muted);
+}
+
+/* Light mode scrollbar */
+:root.light::-webkit-scrollbar-track {
+  background: var(--color-bg-darkest);
+}
+
+:root.light::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+}
+
+:root.light::-webkit-scrollbar-thumb:hover {
+  background: var(--color-text-secondary);
 }
