@@ -16,7 +16,7 @@ export default function About() {
             <motion.div initial={{ opacity: 0, x: -20 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ delay: 0.2 }} className="md:col-span-2">
               <div className="relative">
                 <div className="aspect-[4/5] rounded-2xl overflow-hidden border-2 border-border hover:border-accent/50 transition-colors">
-                  <img src={`${import.meta.env.BASE_URL}images/about.jpg`} alt="Jan Wilhelm" className="w-full h-full object-cover" onError={(e) => { e.currentTarget.src = `${import.meta.env.BASE_URL}images/profile.png`; e.currentTarget.classList.add('object-top') }} />
+                  <img src={`${import.meta.env.BASE_URL}images/profile2.jpg`} alt="Jan Wilhelm" className="w-full h-full object-cover" onError={(e) => { e.currentTarget.src = `${import.meta.env.BASE_URL}images/profile.png`; e.currentTarget.classList.add('object-top') }} />
                 </div>
                 <div className="absolute -bottom-4 -right-4 bg-bg-card border border-border rounded-xl p-3 flex items-center gap-2">
                   <MapPin size={16} className="text-accent" />
