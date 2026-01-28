@@ -23,6 +23,17 @@ const projects = [
     ],
   },
   {
+    title: 'MovieNight',
+    tagline: 'Discord bot + web app for movie nights',
+    year: '2025',
+    current: true,
+    description: 'Full-stack application for organizing movie nights within Discord communities. A React web app and Discord bot work together — enabling movie voting sessions, personal wishlists, scheduling, ratings, and statistics, all backed by a shared PostgreSQL database and TMDB integration.',
+    stack: ['React', 'Express.js', 'Discord.js', 'PostgreSQL', 'TMDB API', 'JWT', 'Vite'],
+    highlights: ['Three-service architecture: web app, REST API, and Discord bot', 'TMDB-powered movie search with trailers and recommendations', 'Voting system with real-time progress tracking', 'Personal wishlists with random movie picker', 'Discord OAuth2 authentication'],
+    featured: false,
+    previews: [],
+  },
+  {
     title: 'SQL Scrolls Public Release',
     tagline: 'Bachelor Thesis — Gamified SQL learning',
     year: '2023',
