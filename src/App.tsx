@@ -3,6 +3,7 @@ import Hero from './components/Hero'
 import About from './components/About'
 import Projects from './components/Projects'
 import Skills from './components/Skills'
+import FieldTrip from './components/FieldTrip'
 import Photography from './components/Photography'
 import Travel from './components/Travel'
 import Contact from './components/Contact'
@@ -16,6 +17,7 @@ function App() {
         <About />
         <Projects />
         <Skills />
+        <FieldTrip />
         <Travel />
         <Photography />
         <Contact />
