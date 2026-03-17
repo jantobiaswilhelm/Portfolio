@@ -1,0 +1,1 @@
+import{j as t,m as a}from"./index-K65tgCqX.js";function n({children:i}){return t.jsx(a.div,{initial:{opacity:0,y:12},animate:{opacity:1,y:0},exit:{opacity:0,y:-12},transition:{duration:.3,ease:"easeOut"},children:i})}export{n as P};
