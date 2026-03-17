@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Camera, X, ChevronLeft, ChevronRight, Film } from 'lucide-react'
 import photosData from '../data/photos.json'
@@ -11,8 +11,19 @@ export default function Photography() {
 
   const openLightbox = (index: number) => setLightbox(index)
   const closeLightbox = () => setLightbox(null)
-  const prev = () => setLightbox(i => i !== null ? (i - 1 + photos.length) % photos.length : null)
-  const next = () => setLightbox(i => i !== null ? (i + 1) % photos.length : null)
+  const prev = useCallback(() => setLightbox(i => i !== null ? (i - 1 + photos.length) % photos.length : null), [])
+  const next = useCallback(() => setLightbox(i => i !== null ? (i + 1) % photos.length : null), [])
+
+  useEffect(() => {
+    if (lightbox === null) return
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') closeLightbox()
+      if (e.key === 'ArrowLeft') prev()
+      if (e.key === 'ArrowRight') next()
+    }
+    window.addEventListener('keydown', handleKey)
+    return () => window.removeEventListener('keydown', handleKey)
+  }, [lightbox, prev, next])
 
   return (
     <section id="photography" className="py-24 px-6">

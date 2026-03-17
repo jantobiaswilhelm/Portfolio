@@ -1,6 +1,7 @@
-import { useEffect, useRef, useCallback } from 'react'
+import { useEffect, useRef, useCallback, useState } from 'react'
 import { Outlet, useLocation, useNavigate } from 'react-router-dom'
-import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { ChevronLeft, ChevronRight, ChevronUp } from 'lucide-react'
+import { motion, useScroll, useSpring, AnimatePresence } from 'framer-motion'
 import Navbar from '../components/Navbar'
 import Footer from '../components/ui/Footer'
 
@@ -10,11 +11,23 @@ export default function RootLayout() {
   const { pathname } = useLocation()
   const navigate = useNavigate()
   const touchStart = useRef<{ x: number; y: number } | null>(null)
+  const [showBackToTop, setShowBackToTop] = useState(false)
+
+  // Scroll progress bar
+  const { scrollYProgress } = useScroll()
+  const scaleX = useSpring(scrollYProgress, { stiffness: 200, damping: 30 })
 
   // Scroll to top on route change
   useEffect(() => {
     window.scrollTo(0, 0)
   }, [pathname])
+
+  // Back to top visibility
+  useEffect(() => {
+    const handleScroll = () => setShowBackToTop(window.scrollY > 400)
+    window.addEventListener('scroll', handleScroll)
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [])
 
   const currentIndex = pages.indexOf(pathname)
   const isSubpage = currentIndex !== -1
@@ -52,6 +65,12 @@ export default function RootLayout() {
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
     >
+      {/* Scroll progress bar */}
+      <motion.div
+        style={{ scaleX }}
+        className="fixed top-0 left-0 right-0 h-[2px] bg-accent origin-left z-[60]"
+      />
+
       <Navbar />
       <main className="relative">
         <Outlet />
@@ -77,6 +96,22 @@ export default function RootLayout() {
             <ChevronRight size={20} className="group-hover:translate-x-0.5 transition-transform" />
           </button>
         )}
+
+        {/* Back to top */}
+        <AnimatePresence>
+          {showBackToTop && (
+            <motion.button
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.8 }}
+              onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+              className="fixed bottom-6 right-6 z-40 p-3 bg-bg-card/80 backdrop-blur-sm border border-border rounded-xl text-text-muted hover:text-accent hover:border-accent/50 transition-all"
+              aria-label="Back to top"
+            >
+              <ChevronUp size={20} />
+            </motion.button>
+          )}
+        </AnimatePresence>
       </main>
       <Footer />
     </div>

@@ -27,7 +27,7 @@ export default function Projects() {
   }, [previewModal, prevImage, nextImage])
 
   return (
-    <section id="projects" className="py-24 px-6 bg-bg-card/30">
+    <section id="projects" className="py-24 px-6 bg-bg-card/30 scroll-mt-28">
       <div className="max-w-5xl mx-auto">
         <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="flex items-center gap-4 mb-12">
           <h2 className="text-3xl font-bold text-text-primary">Featured Projects</h2>

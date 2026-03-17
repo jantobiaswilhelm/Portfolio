@@ -4,7 +4,7 @@ import { techStack, certifications, international, timeline } from '../data/skil
 
 export default function Skills() {
   return (
-    <section id="skills" className="py-24 px-6">
+    <section id="skills" className="py-24 px-6 scroll-mt-28">
       <div className="max-w-5xl mx-auto">
         <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="flex items-center gap-4 mb-12">
           <h2 className="text-3xl font-bold text-text-primary">Skills & Experience</h2>
@@ -53,7 +53,7 @@ export default function Skills() {
               </div>
             </motion.div>
           </div>
-          <motion.div initial={{ opacity: 0, x: 20 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }}>
+          <motion.div id="timeline" initial={{ opacity: 0, x: 20 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} className="scroll-mt-32">
             <h3 className="text-xl font-semibold text-accent mb-6">Timeline</h3>
             <div className="space-y-4 relative">
               <div className="absolute left-[5px] top-2 bottom-2 w-0.5 bg-gradient-to-b from-accent via-accent/30 to-transparent" />

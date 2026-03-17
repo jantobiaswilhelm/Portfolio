@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { Briefcase, Camera, User, MapPin, Code, Gamepad2, GraduationCap } from 'lucide-react'
 import { useTypewriter } from '../hooks/useTypewriter'
+import { useCountUp } from '../hooks/useCountUp'
 import PreviewCard from '../components/ui/PreviewCard'
 import PageTransition from '../components/ui/PageTransition'
 import { projects } from '../data/projects'
@@ -17,6 +18,9 @@ export default function HubPage() {
     document.title = 'Jan Wilhelm'
   }, [])
 
+  const projectCount = useCountUp(projects.length, 1200, 600)
+  const activeCount = useCountUp(projects.filter(p => p.current).length, 1200, 800)
+  const photoCount = useCountUp(photosData.length, 1200, 700)
   const featured = projects.find(p => p.featured) || projects[0]
   const second = projects.find(p => p.title === 'SQL Scrolls Public Release') || projects[2]
   const topTech = techStack.slice(0, 8)
@@ -158,7 +162,7 @@ export default function HubPage() {
                     </div>
                   )}
                 </div>
-                <p className="text-text-muted text-xs">{projects.length} projects &middot; {projects.filter(p => p.current).length} active</p>
+                <p className="text-text-muted text-xs">{projectCount} projects &middot; {activeCount} active</p>
                 <div className="flex flex-wrap gap-1.5">
                   {topTech.map(t => (
                     <span key={t} className="px-2 py-0.5 text-xs bg-accent/10 text-accent rounded-full border border-accent/20">{t}</span>
@@ -182,7 +186,7 @@ export default function HubPage() {
                     </div>
                   ))}
                 </div>
-                <p className="text-text-muted text-xs">{photosData.length} frames on Fujifilm</p>
+                <p className="text-text-muted text-xs">{photoCount} frames on Fujifilm</p>
               </div>
             </PreviewCard>
           </div>
