@@ -1,29 +1,6 @@
 import { motion } from 'framer-motion'
 import { Briefcase, GraduationCap, Award, Globe } from 'lucide-react'
-
-const techStack = ['React', 'TypeScript', 'JavaScript', 'Node.js', 'Spring Boot', 'Python', 'Tailwind CSS', 'PostgreSQL', 'MongoDB', 'Firebase', 'Docker', 'Git', 'Figma', 'BPMN', 'UML', 'ERD']
-
-const certifications = [
-  { name: 'Cambridge FIRST', level: 'Grade A (C1)', year: '2017', lang: 'English' },
-  { name: 'DELF B1', level: 'B2 Exam', year: '2015', lang: 'French' },
-]
-
-const international = [
-  { country: 'China', code: 'cn', city: 'Greater Bay Area', year: '2025', type: 'Field Trip' },
-  { country: 'Denmark', code: 'dk', city: 'Aarhus', year: '2020', type: 'Exchange Semester' },
-  { country: 'UK', code: 'gb', city: 'Cambridge', year: '2017', type: 'Language Stay' },
-]
-
-const timeline = [
-  { year: '2025', title: 'Support Hero @ twio.tech', type: 'work', current: true },
-  { year: '2024-2027', title: 'MSc Business Information Systems @ FHNW', type: 'edu', current: true },
-  { year: '2024', title: 'Zivildienst WBZ', type: 'work', current: false },
-  { year: '2019-2023', title: 'BSc Business Information Technology @ FHNW', type: 'edu', current: false },
-  { year: '2020', title: 'Exchange @ Erhvervsakademiet Aarhus', type: 'edu', current: false },
-  { year: '2018-2019', title: 'Lehrerassistent @ HPS Liestal (Zivildienst)', type: 'work', current: false },
-  { year: '2017-2018', title: 'Intern Supply Chain @ SBB Cargo International', type: 'work', current: false },
-  { year: '2014-2018', title: 'Wirtschaftsmittelschule (EFZ + Berufsmatur)', type: 'edu', current: false },
-]
+import { techStack, certifications, international, timeline } from '../data/skills'
 
 export default function Skills() {
   return (

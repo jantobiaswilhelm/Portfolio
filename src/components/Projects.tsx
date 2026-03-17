@@ -1,69 +1,7 @@
-import { useState } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ExternalLink, Github, Sparkles, FileText, BookOpen, Play, Image, X, ChevronLeft, ChevronRight } from 'lucide-react'
-
-const projects = [
-  {
-    title: 'Lutem',
-    tagline: '"Headspace meets Steam"',
-    year: '2025',
-    current: true,
-    description: 'AI-powered gaming recommendation platform that matches your mood to the perfect game. Built as part of my Master\'s coursework with startup potential.',
-    stack: ['React', 'TypeScript', 'Spring Boot', 'Firebase', 'PostgreSQL', 'Tailwind'],
-    live: 'https://lutemweb.netlify.app',
-    github: 'https://github.com/jantobiaswilhelm/LutemPrototype',
-    document: 'docs/lutem-project.pdf',
-    highlights: ['Multi-dimensional recommendation engine', 'Steam library integration', '4 themes × 2 modes design system'],
-    featured: true,
-    // Add your screenshots here - place files in public/images/projects/
-    previews: [
-      { src: 'images/projects/lutem-1.png', caption: 'Mood selection interface' },
-      { src: 'images/projects/lutem-2.png', caption: 'Game recommendations' },
-      { src: 'images/projects/lutem-3.png', caption: 'Theme variants' },
-    ],
-  },
-  {
-    title: 'MovieNight',
-    tagline: 'Discord bot + web app for movie nights',
-    year: '2025',
-    current: true,
-    description: 'Full-stack application for organizing movie nights within Discord communities. A React web app and Discord bot work together — enabling movie voting sessions, personal wishlists, scheduling, ratings, and statistics, all backed by a shared PostgreSQL database and TMDB integration.',
-    stack: ['React', 'Express.js', 'Discord.js', 'PostgreSQL', 'TMDB API', 'JWT', 'Vite'],
-    highlights: ['Three-service architecture: web app, REST API, and Discord bot', 'TMDB-powered movie search with trailers and recommendations', 'Voting system with real-time progress tracking', 'Personal wishlists with random movie picker', 'Discord OAuth2 authentication'],
-    featured: false,
-    previews: [],
-  },
-  {
-    title: 'SQL Scrolls Public Release',
-    tagline: 'Bachelor Thesis — Gamified SQL learning',
-    year: '2023',
-    current: false,
-    description: 'Helped FHNW publish their in-house SQL learning game for public use. The game teaches SQL fundamentals through interactive challenges with instant feedback — learning by doing.',
-    stack: ['JavaScript', 'HTML/CSS', 'Node.js', 'MongoDB', 'Docker', 'Git'],
-    github: 'https://github.com/fhnw-sql/FHNW-SQLScrolls',
-    publication: 'https://irf.fhnw.ch/entities/publication/f7aa9072-b6f5-4cfb-b0dc-a43211171f50',
-    intro: 'https://studierendenprojekte.wirtschaft.fhnw.ch/view/2699',
-    highlights: ['Extended game with new tasks & UI improvements', 'Simplified deployment via Docker', 'Migrated project from GitLab to GitHub', 'Created documentation & video tutorials', 'Test plan execution & bugfixing'],
-    featured: false,
-    previews: [
-      { src: 'images/projects/sqlscrolls-1.png', caption: 'Game interface' },
-      { src: 'images/projects/sqlscrolls-2.png', caption: 'SQL challenge' },
-    ],
-  },
-  {
-    title: 'Business Process Digitalization Guide',
-    tagline: 'Process optimization consulting',
-    year: '2022',
-    current: false,
-    description: 'Practical project at FHNW developing a structured guide for digitalizing business processes. Analyzed workflows, identified inefficiencies, and proposed concrete improvement measures.',
-    stack: ['BPMN', 'UML', 'Process Modeling', 'Requirements Engineering'],
-    highlights: ['As-is / To-be process modeling', 'Potential analysis for inefficiencies', 'Digitalization roadmap', 'Media break reduction strategies'],
-    featured: false,
-    previews: [], // No previews for this one
-  },
-]
-
-type Preview = { src: string; caption: string }
+import { projects, type Preview } from '../data/projects'
 
 export default function Projects() {
   const [previewModal, setPreviewModal] = useState<{ previews: Preview[]; index: number } | null>(null)
@@ -74,8 +12,19 @@ export default function Projects() {
     }
   }
   const closePreview = () => setPreviewModal(null)
-  const prevImage = () => setPreviewModal(p => p ? { ...p, index: (p.index - 1 + p.previews.length) % p.previews.length } : null)
-  const nextImage = () => setPreviewModal(p => p ? { ...p, index: (p.index + 1) % p.previews.length } : null)
+  const prevImage = useCallback(() => setPreviewModal(p => p ? { ...p, index: (p.index - 1 + p.previews.length) % p.previews.length } : null), [])
+  const nextImage = useCallback(() => setPreviewModal(p => p ? { ...p, index: (p.index + 1) % p.previews.length } : null), [])
+
+  useEffect(() => {
+    if (!previewModal) return
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') closePreview()
+      if (e.key === 'ArrowLeft') prevImage()
+      if (e.key === 'ArrowRight') nextImage()
+    }
+    window.addEventListener('keydown', handleKey)
+    return () => window.removeEventListener('keydown', handleKey)
+  }, [previewModal, prevImage, nextImage])
 
   return (
     <section id="projects" className="py-24 px-6 bg-bg-card/30">

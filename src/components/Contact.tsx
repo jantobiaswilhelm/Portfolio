@@ -1,13 +1,6 @@
 import { motion } from 'framer-motion'
-import { Mail, Linkedin, Github, MapPin, Send, Instagram, Coffee } from 'lucide-react'
-
-const socials = [
-  { icon: Mail, label: 'Email', href: 'mailto:jan.tobias.wilhelm@gmail.com' },
-  { icon: Linkedin, label: 'LinkedIn', href: 'https://www.linkedin.com/in/jan-wilhelm-1a235a197/' },
-  { icon: Github, label: 'GitHub', href: 'https://github.com/jantobiaswilhelm' },
-  { icon: Instagram, label: 'Instagram', href: 'https://www.instagram.com/tschaaaaan/' },
-  { icon: Coffee, label: 'Ko-fi', href: 'https://ko-fi.com/lutem' },
-]
+import { MapPin, Send } from 'lucide-react'
+import { socials } from '../data/contact'
 
 export default function Contact() {
   return (
@@ -30,9 +23,6 @@ export default function Contact() {
             ))}
           </div>
         </motion.div>
-        <footer className="pt-8 border-t border-border">
-          <p className="text-text-muted text-sm">© {new Date().getFullYear()} <span className="text-accent">Jan Wilhelm</span>. Built with React, TypeScript & Tailwind.</p>
-        </footer>
       </div>
     </section>
   )

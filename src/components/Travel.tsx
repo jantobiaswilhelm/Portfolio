@@ -1,80 +1,35 @@
-import { useState } from 'react'
-import { motion } from 'framer-motion'
+import { useState, useCallback, useEffect } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 // @ts-ignore
 import { ComposableMap, Geographies, Geography, ZoomableGroup } from 'react-simple-maps'
-import { Plane, MapPin } from 'lucide-react'
+import { Plane, MapPin, ExternalLink, X, ChevronLeft, ChevronRight } from 'lucide-react'
 import { useTheme } from '../hooks/useTheme'
+import { visitedCountries, tripsList, countryCount, fieldTripPhotos } from '../data/travel'
 
 const geoUrl = 'https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json'
 
-// Map uses geo.properties.name - we need to match those exact names
-const visitedCountries: Record<string, { name: string; year: string; isHome?: boolean }> = {
-  'Monaco': { name: 'Monaco', year: '2017' },
-  'France': { name: 'France', year: 'Multiple' },
-  'Germany': { name: 'Germany', year: 'Multiple' },
-  'Iceland': { name: 'Iceland', year: '2018' },
-  'United States of America': { name: 'USA', year: '2019' },
-  'Thailand': { name: 'Thailand', year: '2019' },
-  'Singapore': { name: 'Singapore', year: '2019' },
-  'Italy': { name: 'Italy', year: '2020' },
-  'Netherlands': { name: 'Netherlands', year: '2020' },
-  'Denmark': { name: 'Denmark', year: '2020' },
-  'Sweden': { name: 'Sweden', year: '2021' },
-  'Costa Rica': { name: 'Costa Rica', year: '2024' },
-  'Poland': { name: 'Poland', year: '2025' },
-  'Czechia': { name: 'Czech Republic', year: '2025' },
-  'Portugal': { name: 'Portugal', year: '2024' },
-  'China': { name: 'China', year: '2025' },
-  'Austria': { name: 'Austria', year: '2021' },
-  'Croatia': { name: 'Croatia', year: '2017' },
-  'Belgium': { name: 'Belgium', year: '2020' },
-  'United Kingdom': { name: 'UK', year: '2016, 2017' },
-  'Norway': { name: 'Norway', year: '2011' },
-  'Finland': { name: 'Finland', year: '2013' },
-  'Tunisia': { name: 'Tunisia', year: '2014' },
-  'Hungary': { name: 'Hungary', year: '2019' },
-  'Greece': { name: 'Greece', year: '2014' },
-  'Spain': { name: 'Spain', year: '2016' },
-  'Switzerland': { name: 'Switzerland', year: 'Home', isHome: true },
-}
-
-// For the sidebar list
-const tripsList = [
-  { name: 'Monaco', year: '2017' },
-  { name: 'France', year: 'Multiple' },
-  { name: 'Germany', year: 'Multiple' },
-  { name: 'Iceland', year: '2018' },
-  { name: 'USA', year: '2019' },
-  { name: 'Thailand', year: '2019' },
-  { name: 'Singapore', year: '2019' },
-  { name: 'Hong Kong', year: '2019' },
-  { name: 'Italy', year: '2020' },
-  { name: 'Netherlands', year: '2020' },
-  { name: 'Denmark', year: '2020' },
-  { name: 'Sweden', year: '2021' },
-  { name: 'Costa Rica', year: '2024' },
-  { name: 'Poland', year: '2025' },
-  { name: 'Czech Republic', year: '2025' },
-  { name: 'Portugal', year: '2024' },
-  { name: 'China', year: '2025' },
-  { name: 'Austria', year: '2021' },
-  { name: 'Croatia', year: '2017' },
-  { name: 'Belgium', year: '2020' },
-  { name: 'UK', year: '2016, 2017' },
-  { name: 'Norway', year: '2011' },
-  { name: 'Finland', year: '2013' },
-  { name: 'Tunisia', year: '2014' },
-  { name: 'Hungary', year: '2019' },
-  { name: 'Greece', year: '2014' },
-  { name: 'Spain', year: '2016' },
-]
-
-const countryCount = tripsList.length + 1 // +1 for Switzerland (home)
+const chinaPhotos = fieldTripPhotos.map(p => ({ ...p, src: `${import.meta.env.BASE_URL}${p.src}` }))
 
 export default function Travel() {
   const [tooltip, setTooltip] = useState<{ name: string; year: string } | null>(null)
   const [tooltipPos, setTooltipPos] = useState({ x: 0, y: 0 })
+  const [lightbox, setLightbox] = useState<number | null>(null)
   const { isDark } = useTheme()
+
+  const closeLightbox = () => setLightbox(null)
+  const prevPhoto = useCallback(() => setLightbox(i => i !== null ? (i - 1 + chinaPhotos.length) % chinaPhotos.length : null), [])
+  const nextPhoto = useCallback(() => setLightbox(i => i !== null ? (i + 1) % chinaPhotos.length : null), [])
+
+  useEffect(() => {
+    if (lightbox === null) return
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') closeLightbox()
+      if (e.key === 'ArrowLeft') prevPhoto()
+      if (e.key === 'ArrowRight') nextPhoto()
+    }
+    window.addEventListener('keydown', handleKey)
+    return () => window.removeEventListener('keydown', handleKey)
+  }, [lightbox, prevPhoto, nextPhoto])
 
   // Theme-aware colors
   const colors = {
@@ -216,7 +171,103 @@ export default function Travel() {
             ))}
           </motion.div>
         </div>
+
+        {/* Notable Trips — China Field Trip */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="mt-16"
+        >
+          <div className="flex items-center gap-4 mb-8">
+            <h3 className="text-2xl font-bold text-text-primary flex items-center gap-3">
+              <MapPin className="text-accent" />Highlights
+            </h3>
+            <span className="px-3 py-1 text-xs font-mono bg-accent/20 text-accent rounded-full">2025</span>
+            <div className="flex-1 h-px bg-gradient-to-r from-accent/50 to-transparent" />
+          </div>
+
+          <div className="bg-bg-card border border-border rounded-xl p-6 md:p-8">
+            <h4 className="text-xl font-semibold text-accent mb-4">Shenzhen Bay Field Trip</h4>
+            <div className="space-y-4 text-text-secondary mb-6 max-w-3xl">
+              <p>
+                As part of my MSc in Business Information Systems at FHNW, I joined a two-week field trip to China's Greater Bay Area.
+                We visited companies like <span className="text-accent">Huawei</span>, <span className="text-accent">Tencent</span>, <span className="text-accent">Sika</span>, and <span className="text-accent">Pony.ai</span> across Guangzhou, Dongguan, and Shenzhen.
+              </p>
+              <p>
+                Beyond the professional visits, the trip was about bonding with Swiss and Chinese students, exploring Cantonese cuisine, and navigating language barriers with WeChat and translation apps.
+              </p>
+            </div>
+
+            <a
+              href="https://lnkd.in/eNeCfqG6"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 px-4 py-2 bg-accent/10 border border-accent/30 rounded-lg text-accent hover:bg-accent/20 transition-all text-sm font-medium mb-6"
+            >
+              <ExternalLink size={14} />Read the full blog
+            </a>
+
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {chinaPhotos.map((photo, index) => (
+                <motion.div
+                  key={photo.src}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: index * 0.1 }}
+                  onClick={() => setLightbox(index)}
+                  className="aspect-[3/2] rounded-lg overflow-hidden cursor-pointer group relative border border-border"
+                >
+                  <img
+                    src={photo.src}
+                    alt={photo.alt}
+                    loading="lazy"
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-bg-darkest/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        </motion.div>
       </div>
+
+      {/* Lightbox */}
+      <AnimatePresence>
+        {lightbox !== null && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 bg-bg-darkest/95 backdrop-blur-sm flex items-center justify-center"
+            onClick={closeLightbox}
+          >
+            <button onClick={closeLightbox} className="absolute top-6 right-6 text-text-secondary hover:text-accent transition-colors">
+              <X size={32} />
+            </button>
+            <button onClick={(e) => { e.stopPropagation(); prevPhoto() }} className="absolute left-6 text-text-secondary hover:text-accent transition-colors">
+              <ChevronLeft size={40} />
+            </button>
+            <button onClick={(e) => { e.stopPropagation(); nextPhoto() }} className="absolute right-6 text-text-secondary hover:text-accent transition-colors">
+              <ChevronRight size={40} />
+            </button>
+            <motion.img
+              key={chinaPhotos[lightbox].src}
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.9 }}
+              src={chinaPhotos[lightbox].src}
+              alt={chinaPhotos[lightbox].alt}
+              className="max-w-[90vw] max-h-[85vh] object-contain rounded-lg"
+              onClick={(e) => e.stopPropagation()}
+            />
+            <div className="absolute bottom-6 left-1/2 -translate-x-1/2 text-text-secondary text-sm">
+              <span className="text-accent font-mono">{lightbox + 1}</span> / {chinaPhotos.length}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </section>
   )
 }
