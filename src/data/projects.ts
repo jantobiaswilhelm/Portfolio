@@ -19,6 +19,24 @@ export interface Project {
 
 export const projects: Project[] = [
   {
+    title: 'CX Lab Workspace',
+    tagline: 'IBM Agentic AI Challenge × FHNW × Roche',
+    year: '2026',
+    current: true,
+    description: 'Recruitment workspace for the Roche Diagnostics CX Lab, built as part of the IBM Agentic AI Challenge in collaboration with FHNW. A team of specialised agents on IBM watsonx Orchestrate — Intake Parser, Smart Matcher, Scheduler, Comms Agent — work behind a custom chat to turn a recruiter\'s natural-language brief into a fully staffed user-research study: parsing requirements, matching against a participant pool, drafting invitations, and handing off to scheduling. The Next.js interface wraps the orchestrator in seven live data views (dashboard, projects, calendar, participants, communications, registrations, screener/feedback) backed by Supabase, plus public flows for participant self-registration, screener questionnaires, and post-session feedback.',
+    stack: ['Next.js 14', 'TypeScript', 'Tailwind', 'Supabase', 'IBM watsonx Orchestrate', 'PostgreSQL'],
+    highlights: [
+      'Multi-agent orchestration on IBM watsonx Orchestrate with async run + poll + thread-stitching',
+      'Seven live views: dashboard, projects, calendar, participants, communications, registrations, screener',
+      'Token-protected public flows for participant registration, screener questionnaires, and feedback',
+      'Recruiter-in-the-loop approval gates between matching, invitation, and booking stages',
+      'Custom "Clinical Atelier" design system — hairline borders, ink-on-paper typography, editorial accents',
+      'End-to-end pipeline: brief → match → invite → screen → schedule → conduct → feedback → report',
+    ],
+    featured: true,
+    previews: [],
+  },
+  {
     title: 'Lutem',
     tagline: '"Headspace meets Steam"',
     year: '2025',
