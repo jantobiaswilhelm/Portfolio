@@ -30,10 +30,8 @@ refactoring the existing `src/` in place. Existing assets are carried over:
 The existing multi-page code (`src/pages/*`, `src/layouts/RootLayout`,
 `src/components/*`, react-router) is **not** reused.
 
-> **Open item for review:** "Fresh build" is assumed to mean scaffolding the new
-> project **within the same git repository** (replacing `src/`, keeping `public/`,
-> git history, and deploy config). Confirm during spec review if a brand-new repo
-> is preferred instead.
+**Confirmed:** the fresh build happens **within the same git repository** —
+replacing `src/`, keeping `public/`, git history, and deploy config. No new repo.
 
 ## Tech Stack
 
