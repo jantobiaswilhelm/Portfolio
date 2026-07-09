@@ -43,4 +43,16 @@ describe('Lightbox', () => {
     await user.keyboard('{Escape}')
     expect(onClose).toHaveBeenCalled()
   })
+
+  it('Tab keeps focus within the dialog', async () => {
+    const user = userEvent.setup()
+    render(<Lightbox photos={photos} index={0} onClose={() => {}} onChange={() => {}} />)
+    const dialog = document.querySelector('[role="dialog"]') as HTMLElement
+    const buttons = Array.from(dialog.querySelectorAll('button')) as HTMLElement[]
+    expect(buttons.length).toBeGreaterThan(0)
+    // Focus the last button, then Tab — should cycle back inside the dialog
+    buttons[buttons.length - 1].focus()
+    await user.keyboard('{Tab}')
+    expect(dialog.contains(document.activeElement)).toBe(true)
+  })
 })

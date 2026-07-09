@@ -69,6 +69,13 @@ export function Hero() {
           </Reveal>
         </div>
       </div>
+      {/* scroll cue */}
+      <div className="absolute bottom-10 left-8 z-10 flex flex-col items-start gap-1.5" aria-hidden="true">
+        <span className="font-head text-tm uppercase tracking-[0.25em] text-xs">Scroll</span>
+        <div className="w-px h-10 overflow-hidden">
+          <div className="w-full h-full bg-tm animate-[sweep_2s_ease-in-out_infinite]" />
+        </div>
+      </div>
     </section>
   )
 }

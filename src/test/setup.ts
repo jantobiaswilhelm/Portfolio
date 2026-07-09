@@ -15,6 +15,9 @@ Object.defineProperty(window, 'matchMedia', {
   }),
 })
 
+// scrollTo (jsdom prints "Not implemented: window.scrollTo" without this)
+window.scrollTo = () => {}
+
 // IntersectionObserver (used by framer-motion whileInView / onViewportEnter)
 class MockIntersectionObserver {
   observe() {}

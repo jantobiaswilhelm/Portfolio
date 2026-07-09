@@ -28,6 +28,26 @@ export function Lightbox({
       if (e.key === 'Escape') onClose()
       if (e.key === 'ArrowLeft') onChange(wrap(index - 1))
       if (e.key === 'ArrowRight') onChange(wrap(index + 1))
+      if (e.key === 'Tab' && dialogRef.current) {
+        const focusable = Array.from(
+          dialogRef.current.querySelectorAll<HTMLElement>('button')
+        )
+        if (focusable.length === 0) return
+        const first = focusable[0]
+        const last = focusable[focusable.length - 1]
+        const active = document.activeElement
+        if (e.shiftKey) {
+          if (active === first || !dialogRef.current.contains(active)) {
+            e.preventDefault()
+            last.focus()
+          }
+        } else {
+          if (active === last || !dialogRef.current.contains(active)) {
+            e.preventDefault()
+            first.focus()
+          }
+        }
+      }
     }
     window.addEventListener('keydown', onKey)
     return () => {
