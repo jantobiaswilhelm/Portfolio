@@ -1648,7 +1648,7 @@ Expected: FAIL — cannot find module `./Lightbox`.
 - [ ] **Step 3: Implement `src/components/sections/Lightbox.tsx`**
 
 ```tsx
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 
 export interface Frame {
   src: string
@@ -1667,16 +1667,23 @@ export function Lightbox({
   onChange: (next: number) => void
 }) {
   const wrap = (i: number) => (i + photos.length) % photos.length
+  const dialogRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     if (index === null) return
+    // basic focus management: move focus into the dialog on open
+    const previouslyFocused = document.activeElement as HTMLElement | null
+    dialogRef.current?.focus()
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose()
       if (e.key === 'ArrowLeft') onChange(wrap(index - 1))
       if (e.key === 'ArrowRight') onChange(wrap(index + 1))
     }
     window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
+    return () => {
+      window.removeEventListener('keydown', onKey)
+      previouslyFocused?.focus()
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [index])
 
@@ -1685,7 +1692,12 @@ export function Lightbox({
 
   return (
     <div
-      className="fixed inset-0 z-[100] bg-[rgba(5,5,7,0.96)] backdrop-blur-md flex items-center justify-center"
+      ref={dialogRef}
+      role="dialog"
+      aria-modal="true"
+      aria-label={`Photo ${index + 1} of ${photos.length}`}
+      tabIndex={-1}
+      className="fixed inset-0 z-[100] bg-[rgba(5,5,7,0.96)] backdrop-blur-md flex items-center justify-center outline-none"
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose()
       }}
