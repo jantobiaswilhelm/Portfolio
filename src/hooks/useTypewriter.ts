@@ -1,32 +1,46 @@
-import { useState, useEffect } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
-export function useTypewriter(words: string[], typingSpeed = 80, deletingSpeed = 50, pauseMs = 2000) {
+interface Options {
+  typeMs?: number
+  deleteMs?: number
+  holdMs?: number
+}
+
+export function useTypewriter(words: string[], opts: Options = {}): string {
+  const { typeMs = 85, deleteMs = 40, holdMs = 1500 } = opts
   const [text, setText] = useState('')
-  const [wordIndex, setWordIndex] = useState(0)
-  const [isDeleting, setIsDeleting] = useState(false)
+  const state = useRef({ wordIndex: 0, charCount: 0, deleting: false })
 
   useEffect(() => {
-    const currentWord = words[wordIndex]
+    if (words.length === 0) return
+    let timer: ReturnType<typeof setTimeout>
 
-    const timeout = setTimeout(() => {
-      if (!isDeleting) {
-        if (text.length < currentWord.length) {
-          setText(currentWord.slice(0, text.length + 1))
-        } else {
-          setTimeout(() => setIsDeleting(true), pauseMs)
-        }
+    const tick = () => {
+      const s = state.current
+      const word = words[s.wordIndex]
+
+      if (!s.deleting && s.charCount < word.length) {
+        s.charCount++
+        setText(word.slice(0, s.charCount))
+        timer = setTimeout(tick, typeMs)
+      } else if (!s.deleting && s.charCount === word.length) {
+        s.deleting = true
+        timer = setTimeout(tick, holdMs)
+      } else if (s.deleting && s.charCount > 0) {
+        s.charCount--
+        setText(word.slice(0, s.charCount))
+        timer = setTimeout(tick, deleteMs)
       } else {
-        if (text.length > 0) {
-          setText(text.slice(0, -1))
-        } else {
-          setIsDeleting(false)
-          setWordIndex((i) => (i + 1) % words.length)
-        }
+        s.deleting = false
+        s.wordIndex = (s.wordIndex + 1) % words.length
+        timer = setTimeout(tick, typeMs)
       }
-    }, isDeleting ? deletingSpeed : typingSpeed)
+    }
 
-    return () => clearTimeout(timeout)
-  }, [text, isDeleting, wordIndex, words, typingSpeed, deletingSpeed, pauseMs])
+    timer = setTimeout(tick, typeMs)
+    return () => clearTimeout(timer)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [words.join('|'), typeMs, deleteMs, holdMs])
 
   return text
 }
