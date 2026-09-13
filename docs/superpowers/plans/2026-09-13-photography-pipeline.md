@@ -1404,7 +1404,19 @@ Expected: `tsc -b` passes with no errors, vite build succeeds.
 - [ ] **Step 4: Lint**
 
 Run: `npm run lint`
-Expected: no errors.
+Expected: exactly 2 errors, both pre-existing and both out of scope for this plan:
+
+```
+src/hooks/usePrefersReducedMotion.ts:8   react-hooks/set-state-in-effect
+src/lib/smooth-scroll.tsx:11             react-refresh/only-export-components
+```
+
+Do NOT fix these. They predate this work and are unrelated to the photo pipeline.
+`scripts/*.mjs` is not linted at all: the flat config scopes its only block to
+`**/*.{ts,tsx}`. That is a pre-existing gap, also out of scope.
+
+A THIRD error, or an error in any file this plan touches, is a real regression and must
+be fixed before the task is complete.
 
 - [ ] **Step 5: Full test suite**
 
