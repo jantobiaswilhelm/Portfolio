@@ -2,12 +2,26 @@ import { describe, it, expect, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { Lightbox } from './Lightbox'
+import type { Photo } from '../../data/photos-manifest'
 
-const photos = [
-  { src: 'a.jpg', alt: 'A' },
-  { src: 'b.jpg', alt: 'B' },
-  { src: 'c.jpg', alt: 'C' },
-]
+const photo = (id: string, alt: string): Photo => ({
+  id,
+  w: 6240,
+  h: 4160,
+  widths: [400, 800, 1200, 1600],
+  alt,
+  altIsDefault: false,
+  place: 'Venice',
+  year: '2023',
+  camera: 'Fujifilm X-T4',
+  lens: 'XF16-55mmF2.8 R LM WR',
+  focalLength: '23mm',
+  aperture: 'f/2.8',
+  iso: 200,
+  lqip: 'data:image/webp;base64,AA',
+})
+
+const photos: Photo[] = [photo('a', 'A'), photo('b', 'B'), photo('c', 'C')]
 
 describe('Lightbox', () => {
   it('renders nothing when index is null', () => {
@@ -54,5 +68,26 @@ describe('Lightbox', () => {
     buttons[buttons.length - 1].focus()
     await user.keyboard('{Tab}')
     expect(dialog.contains(document.activeElement)).toBe(true)
+  })
+
+  it('shows place, year, camera and lens for the open frame', () => {
+    render(<Lightbox photos={photos} index={0} onClose={() => {}} onChange={() => {}} />)
+    expect(screen.getByText(/Venice, 2023/)).toBeInTheDocument()
+    expect(screen.getByText(/Fujifilm X-T4/)).toBeInTheDocument()
+    expect(screen.getByText(/XF16-55mmF2\.8/)).toBeInTheDocument()
+  })
+
+  it('loads a derivative rather than an original', () => {
+    render(<Lightbox photos={photos} index={0} onClose={() => {}} onChange={() => {}} />)
+    const img = screen.getByAltText('A') as HTMLImageElement
+    expect(img.getAttribute('src')).toContain('-1600.jpg')
+  })
+
+  it('falls back to the largest width a narrow photo actually has', () => {
+    const narrow: Photo = { ...photo('n', 'N'), w: 1440, h: 960, widths: [400, 800, 1200] }
+    render(<Lightbox photos={[narrow]} index={0} onClose={() => {}} onChange={() => {}} />)
+    const img = screen.getByAltText('N') as HTMLImageElement
+    expect(img.getAttribute('src')).toContain('-1200.jpg')
+    expect(img.getAttribute('src')).not.toContain('-1600')
   })
 })

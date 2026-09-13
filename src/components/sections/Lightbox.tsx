@@ -1,8 +1,13 @@
 import { useEffect, useRef } from 'react'
+import { largestWidth, photoUrl, type Photo } from '../../data/photos-manifest'
+import { useSmoothScroll } from '../../lib/smooth-scroll'
 
-export interface Frame {
-  src: string
-  alt: string
+export type Frame = Photo
+
+function metaLine(photo: Photo): string {
+  const where = [photo.place, photo.year].filter(Boolean).join(', ')
+  const gear = [photo.camera, photo.lens].filter(Boolean).join(' · ')
+  return [where, gear].filter(Boolean).join('  ')
 }
 
 export function Lightbox({
@@ -11,17 +16,18 @@ export function Lightbox({
   onClose,
   onChange,
 }: {
-  photos: Frame[]
+  photos: Photo[]
   index: number | null
   onClose: () => void
   onChange: (next: number) => void
 }) {
   const wrap = (i: number) => (i + photos.length) % photos.length
   const dialogRef = useRef<HTMLDivElement>(null)
+  const { setScrollLocked } = useSmoothScroll()
 
   useEffect(() => {
     if (index === null) return
-    // basic focus management: move focus into the dialog on open
+    setScrollLocked(true)
     const previouslyFocused = document.activeElement as HTMLElement | null
     dialogRef.current?.focus()
     const onKey = (e: KeyboardEvent) => {
@@ -29,9 +35,7 @@ export function Lightbox({
       if (e.key === 'ArrowLeft') onChange(wrap(index - 1))
       if (e.key === 'ArrowRight') onChange(wrap(index + 1))
       if (e.key === 'Tab' && dialogRef.current) {
-        const focusable = Array.from(
-          dialogRef.current.querySelectorAll<HTMLElement>('button')
-        )
+        const focusable = Array.from(dialogRef.current.querySelectorAll<HTMLElement>('button'))
         if (focusable.length === 0) return
         const first = focusable[0]
         const last = focusable[focusable.length - 1]
@@ -52,6 +56,7 @@ export function Lightbox({
     window.addEventListener('keydown', onKey)
     return () => {
       window.removeEventListener('keydown', onKey)
+      setScrollLocked(false)
       previouslyFocused?.focus()
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -82,7 +87,15 @@ export function Lightbox({
       >
         ‹
       </button>
-      <img src={frame.src} alt={frame.alt} className="max-w-[90vw] max-h-[84vh] object-contain rounded-[10px]" />
+      <picture>
+        <source srcSet={photoUrl(frame.id, largestWidth(frame), 'avif')} type="image/avif" />
+        <source srcSet={photoUrl(frame.id, largestWidth(frame), 'webp')} type="image/webp" />
+        <img
+          src={photoUrl(frame.id, largestWidth(frame), 'jpg')}
+          alt={frame.alt}
+          className="max-w-[90vw] max-h-[84vh] object-contain rounded-[10px]"
+        />
+      </picture>
       <button
         aria-label="Next photo"
         onClick={() => onChange(wrap(index + 1))}
@@ -90,8 +103,12 @@ export function Lightbox({
       >
         ›
       </button>
-      <div className="absolute bottom-6 left-1/2 -translate-x-1/2 text-ts text-[13px] font-head tracking-wide">
-        Frame <b className="text-accent">{String(index + 1).padStart(2, '0')}</b> / {String(photos.length).padStart(2, '0')}
+      <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1 px-4 text-center">
+        <span className="text-ts text-[13px] font-head tracking-wide">
+          Frame <b className="text-accent">{String(index + 1).padStart(2, '0')}</b> /{' '}
+          {String(photos.length).padStart(2, '0')}
+        </span>
+        <span className="text-tm text-[12px] font-head tracking-wide">{metaLine(frame)}</span>
       </div>
     </div>
   )
