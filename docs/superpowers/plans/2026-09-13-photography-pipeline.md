@@ -2,6 +2,11 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
+> **Every task must run `npm run build`, not just `npm test`.** The build runs `tsc -b`,
+> and the test runner does not typecheck. A TS error introduced in Task 2 went unnoticed
+> for three tasks because those tasks only ran the suite. `npm test` green is not
+> sufficient evidence that a task is done.
+
 **Goal:** Replace the hand-maintained photo set with a build-time pipeline that emits responsive derivatives and an EXIF-backed manifest, and replace the CSS-columns masonry with a keyboard-accessible justified-rows grid.
 
 **Architecture:** A Node script (`scripts/photos.mjs`) reads originals from a gitignored `photos/` directory, emits AVIF/WebP/JPEG derivatives at four widths into `public/images/photos/`, and writes `src/data/photos.json`. All pure logic lives in `scripts/photos-lib.mjs` so it can be unit tested without invoking sharp. The grid computes its layout client-side from a pure function in `src/lib/justified-layout.ts`, using intrinsic dimensions from the manifest so no image load is needed to reserve space.
