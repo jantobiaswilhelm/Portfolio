@@ -741,6 +741,12 @@ export interface Photo {
   w: number
   /** Intrinsic height in pixels, after EXIF rotation. */
   h: number
+  /**
+   * The widths actually generated for THIS photo, ascending. Never includes a
+   * width larger than the source, so a srcset built from it can never point at
+   * a file that was not written.
+   */
+  widths: number[]
   alt: string
   altIsDefault: boolean
   place: string
@@ -774,9 +780,18 @@ export function photoUrl(id: string, width: number, ext: 'avif' | 'webp' | 'jpg'
   return `${BASE}images/photos/${id}-${width}.${ext}`
 }
 
-/** A srcset string across every available width for one format. */
-export function photoSrcSet(id: string, ext: 'avif' | 'webp' | 'jpg'): string {
-  return widths.map((w) => `${photoUrl(id, w, ext)} ${w}w`).join(', ')
+/**
+ * A srcset across the widths actually generated for this photo. Takes the whole
+ * photo, not just an id, because the ladder is per-photo: a 1440px original has
+ * no 1600px derivative, and offering one would hand the browser a 404 candidate.
+ */
+export function photoSrcSet(photo: Photo, ext: 'avif' | 'webp' | 'jpg'): string {
+  return photo.widths.map((w) => `${photoUrl(photo.id, w, ext)} ${w}w`).join(', ')
+}
+
+/** The largest derivative that actually exists for this photo. */
+export function largestWidth(photo: Photo): number {
+  return photo.widths[photo.widths.length - 1]
 }
 
 export function aspectOf(photo: Photo): number {
@@ -890,8 +905,9 @@ import type { Photo } from '../../data/photos-manifest'
 
 const photo = (id: string, alt: string): Photo => ({
   id,
-  w: 1500,
-  h: 1000,
+  w: 6240,
+  h: 4160,
+  widths: [400, 800, 1200, 1600],
   alt,
   altIsDefault: false,
   place: 'Venice',
@@ -922,6 +938,14 @@ Leave the six existing test bodies unchanged, then add two more inside the same 
     const img = screen.getByAltText('A') as HTMLImageElement
     expect(img.getAttribute('src')).toContain('-1600.jpg')
   })
+
+  it('falls back to the largest width a narrow photo actually has', () => {
+    const narrow: Photo = { ...photo('n', 'N'), w: 1440, h: 960, widths: [400, 800, 1200] }
+    render(<Lightbox photos={[narrow]} index={0} onClose={() => {}} onChange={() => {}} />)
+    const img = screen.getByAltText('N') as HTMLImageElement
+    expect(img.getAttribute('src')).toContain('-1200.jpg')
+    expect(img.getAttribute('src')).not.toContain('-1600')
+  })
 ```
 
 - [ ] **Step 3: Run the test to verify the two new cases fail**
@@ -935,7 +959,7 @@ Replace `src/components/sections/Lightbox.tsx` entirely:
 
 ```tsx
 import { useEffect, useRef } from 'react'
-import { photoUrl, type Photo } from '../../data/photos-manifest'
+import { largestWidth, photoUrl, type Photo } from '../../data/photos-manifest'
 import { useSmoothScroll } from '../../lib/smooth-scroll'
 
 export type Frame = Photo
@@ -1024,10 +1048,10 @@ export function Lightbox({
         ‹
       </button>
       <picture>
-        <source srcSet={photoUrl(frame.id, 1600, 'avif')} type="image/avif" />
-        <source srcSet={photoUrl(frame.id, 1600, 'webp')} type="image/webp" />
+        <source srcSet={photoUrl(frame.id, largestWidth(frame), 'avif')} type="image/avif" />
+        <source srcSet={photoUrl(frame.id, largestWidth(frame), 'webp')} type="image/webp" />
         <img
-          src={photoUrl(frame.id, 1600, 'jpg')}
+          src={photoUrl(frame.id, largestWidth(frame), 'jpg')}
           alt={frame.alt}
           className="max-w-[90vw] max-h-[84vh] object-contain rounded-[10px]"
         />
@@ -1086,6 +1110,7 @@ const photo = (id: string, alt: string, w: number, h: number): Photo => ({
   id,
   w,
   h,
+  widths: [400, 800, 1200].filter((x) => x <= w),
   alt,
   altIsDefault: false,
   place: 'Venice',
@@ -1279,11 +1304,11 @@ function Tile({
       className="group relative shrink-0 overflow-hidden rounded-[6px] bg-cover bg-center cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
     >
       <picture>
-        <source srcSet={photoSrcSet(photo.id, 'avif')} sizes={`${Math.round(width)}px`} type="image/avif" />
-        <source srcSet={photoSrcSet(photo.id, 'webp')} sizes={`${Math.round(width)}px`} type="image/webp" />
+        <source srcSet={photoSrcSet(photo, 'avif')} sizes={`${Math.round(width)}px`} type="image/avif" />
+        <source srcSet={photoSrcSet(photo, 'webp')} sizes={`${Math.round(width)}px`} type="image/webp" />
         <img
-          src={photoUrl(photo.id, 800, 'jpg')}
-          srcSet={photoSrcSet(photo.id, 'jpg')}
+          src={photoUrl(photo.id, photo.widths[0], 'jpg')}
+          srcSet={photoSrcSet(photo, 'jpg')}
           sizes={`${Math.round(width)}px`}
           alt={photo.alt}
           width={photo.w}
@@ -1322,7 +1347,7 @@ git commit -m "feat: justified photo grid with keyboard-accessible tiles"
 In `src/components/sections/Hero.tsx`, replace the import block at line 7:
 
 ```tsx
-import { findPhoto, heroId, photoSrcSet, photoUrl } from '../../data/photos-manifest'
+import { findPhoto, heroId, largestWidth, photoSrcSet, photoUrl } from '../../data/photos-manifest'
 ```
 
 Replace the section opening and the background block (lines 13 to 28) with:
@@ -1336,11 +1361,11 @@ Replace the section opening and the background block (lines 13 to 28) with:
       <div className="absolute inset-0 z-0">
         {hero && (
           <picture>
-            <source srcSet={photoSrcSet(hero.id, 'avif')} sizes="100vw" type="image/avif" />
-            <source srcSet={photoSrcSet(hero.id, 'webp')} sizes="100vw" type="image/webp" />
+            <source srcSet={photoSrcSet(hero, 'avif')} sizes="100vw" type="image/avif" />
+            <source srcSet={photoSrcSet(hero, 'webp')} sizes="100vw" type="image/webp" />
             <img
-              src={photoUrl(hero.id, 1600, 'jpg')}
-              srcSet={photoSrcSet(hero.id, 'jpg')}
+              src={photoUrl(hero.id, largestWidth(hero), 'jpg')}
+              srcSet={photoSrcSet(hero, 'jpg')}
               sizes="100vw"
               alt=""
               fetchPriority="high"
