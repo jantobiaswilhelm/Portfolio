@@ -12,7 +12,7 @@ import { readdir, stat, mkdir, writeFile, readFile } from 'node:fs/promises'
 import path from 'node:path'
 import sharp from 'sharp'
 import exifr from 'exifr'
-import { WIDTHS, FORMATS, parseFolder, resolveAlt, buildManifest } from './photos-lib.mjs'
+import { WIDTHS, FORMATS, parseFolder, resolveAlt, buildManifest, widthsFor } from './photos-lib.mjs'
 
 const ROOT = process.cwd()
 const SRC_DIR = path.join(ROOT, 'photos')
@@ -36,10 +36,10 @@ async function mtimeOf(file) {
   }
 }
 
-/** True when any derivative is missing or older than the original. */
-async function isStale(originalPath, outDir, name) {
+/** True when any derivative that SHOULD exist is missing or older than the original. */
+async function isStale(originalPath, outDir, name, targetWidths) {
   const original = await mtimeOf(originalPath)
-  for (const width of WIDTHS) {
+  for (const width of targetWidths) {
     for (const { ext } of FORMATS) {
       const derivative = path.join(outDir, `${name}-${width}.${ext}`)
       if ((await mtimeOf(derivative)) < original) return true
@@ -77,10 +77,10 @@ async function processFile(folder, fileName, place, year, overrides) {
     return null
   }
 
-  const stale = await isStale(originalPath, outDir, name)
+  const targetWidths = widthsFor(w)
+  const stale = await isStale(originalPath, outDir, name, targetWidths)
   if (stale) {
-    for (const width of WIDTHS) {
-      if (width > w) continue // never upscale
+    for (const width of targetWidths) {
       const resized = pipeline.clone().resize(width, null, { fit: 'inside' })
       for (const { ext, options } of FORMATS) {
         const target = path.join(outDir, `${name}-${width}.${ext}`)
@@ -101,6 +101,7 @@ async function processFile(folder, fileName, place, year, overrides) {
     id,
     w,
     h,
+    widths: targetWidths,
     alt,
     altIsDefault,
     place,

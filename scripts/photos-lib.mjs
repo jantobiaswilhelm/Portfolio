@@ -51,6 +51,17 @@ export function sortPhotos(photos) {
   })
 }
 
+/**
+ * The widths actually generated for a source image. Never upscales past the
+ * source, except for the degenerate case of an image smaller than the smallest
+ * configured width, where one derivative is still produced so the manifest
+ * never references a missing file.
+ */
+export function widthsFor(sourceWidth) {
+  const usable = WIDTHS.filter((w) => w <= sourceWidth)
+  return usable.length > 0 ? usable : [WIDTHS[0]]
+}
+
 export function buildManifest(photos, heroId) {
   const sorted = sortPhotos(photos)
   const known = new Set(sorted.map((p) => p.id))

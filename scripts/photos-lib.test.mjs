@@ -5,6 +5,7 @@ import {
   resolveAlt,
   sortPhotos,
   buildManifest,
+  widthsFor,
 } from './photos-lib.mjs'
 
 describe('parseFolder', () => {
@@ -100,5 +101,23 @@ describe('buildManifest', () => {
     expect(manifest.photos).toEqual([])
     expect(manifest.heroId).toBeNull()
     expect(manifest.widths).toEqual(WIDTHS)
+  })
+})
+
+describe('widthsFor', () => {
+  it('offers the full ladder for a large source', () => {
+    expect(widthsFor(6240)).toEqual([400, 800, 1200, 1600])
+  })
+
+  it('never offers a width larger than the source', () => {
+    expect(widthsFor(1440)).toEqual([400, 800, 1200])
+  })
+
+  it('handles a source between two rungs', () => {
+    expect(widthsFor(500)).toEqual([400])
+  })
+
+  it('still yields one width for a source smaller than the smallest rung', () => {
+    expect(widthsFor(300)).toEqual([400])
   })
 })
