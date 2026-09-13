@@ -23,7 +23,17 @@ dist-ssr
 *.sln
 *.sw?
 
-# Photo originals. Only generated derivatives under public/images/photos
-# and the manifest at src/data/photos.json are committed.
+# Photo originals stay out; the generated derivatives under
+# public/images/photos and the manifest at src/data/photos.json are committed.
+# The hand-written inputs — which photo is the hero, and the alt-text
+# overrides — are committed too, so the choices survive a clone and the
+# manifest regenerates identically wherever the originals are present.
+# (Without them, `npm run photos` writes an empty manifest.)
+# Git won't descend into an excluded directory, so the place folders have to
+# be re-included before the captions.json inside them can be.
 photos/*
 !photos/.gitkeep
+!photos/hero.json
+!photos/*/
+photos/*/*
+!photos/*/captions.json
