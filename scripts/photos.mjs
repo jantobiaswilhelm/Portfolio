@@ -26,7 +26,7 @@ const ROOT = process.cwd()
 const SRC_DIR = path.join(ROOT, 'photos')
 const OUT_DIR = path.join(ROOT, 'public', 'images', 'photos')
 const MANIFEST = path.join(ROOT, 'src', 'data', 'photos.json')
-const IMAGE_RE = /\.(jpe?g|png|tiff?)$/i
+const IMAGE_RE = /\.(jpe?g|png|tiff?|webp)$/i
 
 async function readJson(file, fallback) {
   try {
@@ -95,9 +95,16 @@ async function processFile(folder, fileName, place, year, overrides) {
     }
   }
 
-  const exif = (await exifr.parse(originalPath, {
-    pick: ['Make', 'Model', 'LensModel', 'FocalLength', 'FNumber', 'ISO', 'DateTimeOriginal'],
-  })) ?? {}
+  // Missing or unreadable EXIF costs this photo its metadata, not the whole run.
+  let exif = {}
+  try {
+    exif =
+      (await exifr.parse(originalPath, {
+        pick: ['Make', 'Model', 'LensModel', 'FocalLength', 'FNumber', 'ISO', 'DateTimeOriginal'],
+      })) ?? {}
+  } catch {
+    console.warn(`  ${id}: no readable EXIF, continuing without camera metadata`)
+  }
 
   const camera = [exif.Make, exif.Model].filter(Boolean).join(' ').trim() || null
   const { alt, altIsDefault } = resolveAlt(fileName, overrides, place, year)
