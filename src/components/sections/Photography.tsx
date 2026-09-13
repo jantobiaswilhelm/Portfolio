@@ -2,11 +2,13 @@ import { useState } from 'react'
 import { Reveal } from '../ui/Reveal'
 import { SectionHeading } from '../ui/SectionHeading'
 import { Lightbox, type Frame } from './Lightbox'
-import photosData from '../../data/photos.json'
+import { largestWidth, photoUrl, photos as manifestPhotos } from '../../data/photos-manifest'
 
-const BASE = import.meta.env.BASE_URL
-const photos: Frame[] = (photosData as { src: string; alt: string }[]).map((p) => ({
-  src: `${BASE}${p.src.slice(1)}`,
+// Task 7 replaces this component with a justified-rows grid that consumes the
+// manifest directly. Until then it keeps its masonry markup and adapts the new
+// manifest to the Frame shape the existing Lightbox still expects.
+const photos: Frame[] = manifestPhotos.map((p) => ({
+  src: photoUrl(p.id, largestWidth(p), 'jpg'),
   alt: p.alt,
 }))
 
