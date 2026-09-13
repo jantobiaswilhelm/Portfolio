@@ -63,4 +63,39 @@ describe('layoutRows', () => {
     const seen = rows.flatMap((r) => r.tiles.map((t) => t.index))
     expect(seen).toEqual(aspects.map((_, i) => i))
   })
+
+  it('does not let a NaN aspect swallow every later row', () => {
+    const aspects = [1.5, NaN, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5]
+    const rows = layoutRows(aspects, CONTAINER, TARGET, GUTTER)
+    expect(rows.length).toBeGreaterThan(1)
+    const seen = rows.flatMap((r) => r.tiles.map((t) => t.index))
+    expect(seen).toEqual(aspects.map((_, i) => i))
+  })
+
+  it('treats a zero aspect as a square rather than producing Infinity', () => {
+    const rows = layoutRows([0, 1.5, 1.5], CONTAINER, TARGET, GUTTER)
+    for (const row of rows) {
+      for (const tile of row.tiles) {
+        expect(Number.isFinite(tile.width)).toBe(true)
+        expect(Number.isFinite(tile.height)).toBe(true)
+      }
+    }
+  })
+
+  it('never returns negative geometry when the gutter exceeds the container', () => {
+    const rows = layoutRows([1.5, 1.5, 1.5], 100, TARGET, 500)
+    for (const row of rows) {
+      for (const tile of row.tiles) {
+        expect(tile.width).toBeGreaterThan(0)
+        expect(tile.height).toBeGreaterThan(0)
+      }
+    }
+  })
+
+  it('returns every photo exactly once across a long run', () => {
+    const aspects = Array.from({ length: 200 }, (_, i) => (i % 3 === 0 ? 0.66 : 1.5))
+    const rows = layoutRows(aspects, CONTAINER, TARGET, GUTTER)
+    const seen = rows.flatMap((r) => r.tiles.map((t) => t.index))
+    expect(seen).toEqual(aspects.map((_, i) => i))
+  })
 })

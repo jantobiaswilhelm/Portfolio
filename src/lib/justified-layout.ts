@@ -16,6 +16,8 @@ export interface LayoutRow {
  * height unless the row would overflow, in which case it scales down to fit.
  *
  * Pure, DOM-free and dependency-free so it can be unit tested directly.
+ *
+ * A non-finite or non-positive aspect ratio is treated as 1 (square).
  */
 export function layoutRows(
   aspects: number[],
@@ -25,15 +27,19 @@ export function layoutRows(
 ): LayoutRow[] {
   if (aspects.length === 0 || containerWidth <= 0 || targetHeight <= 0) return []
 
+  // A non-finite or non-positive aspect would contaminate aspectSum and silently
+  // break every subsequent row, so it degrades to a square instead.
+  const safe = aspects.map((a) => (Number.isFinite(a) && a > 0 ? a : 1))
+
   const build = (indices: number[], aspectSum: number, justify: boolean): LayoutRow => {
-    const available = containerWidth - gutter * (indices.length - 1)
+    const available = Math.max(1, containerWidth - gutter * (indices.length - 1))
     const fitted = available / aspectSum
     const height = justify ? fitted : Math.min(targetHeight, fitted)
     return {
       height,
       tiles: indices.map((index) => ({
         index,
-        width: height * aspects[index],
+        width: height * safe[index],
         height,
       })),
     }
@@ -45,7 +51,7 @@ export function layoutRows(
 
   for (let i = 0; i < aspects.length; i++) {
     current.push(i)
-    aspectSum += aspects[i]
+    aspectSum += safe[i]
     const naturalWidth = targetHeight * aspectSum + gutter * (current.length - 1)
     if (naturalWidth >= containerWidth) {
       rows.push(build(current, aspectSum, true))
