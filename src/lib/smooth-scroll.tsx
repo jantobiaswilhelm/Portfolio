@@ -1,12 +1,23 @@
-import { createContext, useContext, useEffect, useRef, type ReactNode } from 'react'
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useRef,
+  type ReactNode,
+} from 'react'
 import Lenis from 'lenis'
 import { usePrefersReducedMotion } from '../hooks/usePrefersReducedMotion'
 
 interface ScrollContext {
   scrollTo: (id: string) => void
+  setScrollLocked: (locked: boolean) => void
 }
 
-const Ctx = createContext<ScrollContext>({ scrollTo: () => {} })
+const Ctx = createContext<ScrollContext>({
+  scrollTo: () => {},
+  setScrollLocked: () => {},
+})
 
 export const useSmoothScroll = () => useContext(Ctx)
 
@@ -34,6 +45,17 @@ export function SmoothScrollProvider({ children }: { children: ReactNode }) {
     }
   }, [reduced])
 
+  // Lenis keeps running behind a modal, so both it and native overflow are pinned.
+  const setScrollLocked = useCallback((locked: boolean) => {
+    if (locked) {
+      lenisRef.current?.stop()
+      document.body.style.overflow = 'hidden'
+    } else {
+      lenisRef.current?.start()
+      document.body.style.overflow = ''
+    }
+  }, [])
+
   const scrollTo = (id: string) => {
     const el = document.getElementById(id)
     if (!el) return
@@ -41,5 +63,5 @@ export function SmoothScrollProvider({ children }: { children: ReactNode }) {
     else el.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth' })
   }
 
-  return <Ctx.Provider value={{ scrollTo }}>{children}</Ctx.Provider>
+  return <Ctx.Provider value={{ scrollTo, setScrollLocked }}>{children}</Ctx.Provider>
 }
