@@ -36,5 +36,7 @@ class MockResizeObserver {
   unobserve() {}
   disconnect() {}
 }
-// @ts-expect-error assign to global
+// Unlike the IntersectionObserver mock above, this one structurally satisfies
+// the DOM ResizeObserver type, so it needs no @ts-expect-error. Adding one
+// would itself be an error (TS2578, unused directive).
 global.ResizeObserver = MockResizeObserver
