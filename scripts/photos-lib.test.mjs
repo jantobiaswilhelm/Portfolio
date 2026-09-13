@@ -6,6 +6,7 @@ import {
   sortPhotos,
   buildManifest,
   widthsFor,
+  orientedSize,
 } from './photos-lib.mjs'
 
 describe('parseFolder', () => {
@@ -119,5 +120,21 @@ describe('widthsFor', () => {
 
   it('still yields one width for a source smaller than the smallest rung', () => {
     expect(widthsFor(300)).toEqual([400])
+  })
+})
+
+describe('orientedSize', () => {
+  it('leaves dimensions alone when there is no orientation tag', () => {
+    expect(orientedSize({ width: 6240, height: 4160 })).toEqual({ w: 6240, h: 4160 })
+  })
+
+  it('leaves dimensions alone for upright orientations', () => {
+    expect(orientedSize({ width: 6240, height: 4160, orientation: 1 })).toEqual({ w: 6240, h: 4160 })
+    expect(orientedSize({ width: 6240, height: 4160, orientation: 4 })).toEqual({ w: 6240, h: 4160 })
+  })
+
+  it('swaps dimensions for quarter-turn orientations', () => {
+    expect(orientedSize({ width: 6240, height: 4160, orientation: 6 })).toEqual({ w: 4160, h: 6240 })
+    expect(orientedSize({ width: 6240, height: 4160, orientation: 8 })).toEqual({ w: 4160, h: 6240 })
   })
 })

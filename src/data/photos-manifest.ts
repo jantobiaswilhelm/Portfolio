@@ -34,7 +34,6 @@ export interface PhotoManifest {
 
 const data = manifest as unknown as PhotoManifest
 
-export const widths = data.widths
 export const photos = data.photos
 export const heroId = data.heroId
 

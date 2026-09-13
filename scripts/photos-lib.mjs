@@ -62,6 +62,17 @@ export function widthsFor(sourceWidth) {
   return usable.length > 0 ? usable : [WIDTHS[0]]
 }
 
+/**
+ * sharp's .rotate() applies EXIF orientation, which swaps width and height for
+ * the quarter-turn cases (orientation 5 through 8). Returns post-rotation
+ * dimensions.
+ */
+export function orientedSize(metadata) {
+  const { width, height, orientation } = metadata
+  const swapped = orientation !== undefined && orientation >= 5
+  return { w: swapped ? height : width, h: swapped ? width : height }
+}
+
 export function buildManifest(photos, heroId) {
   const sorted = sortPhotos(photos)
   const known = new Set(sorted.map((p) => p.id))

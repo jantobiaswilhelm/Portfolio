@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { Reveal } from '../ui/Reveal'
 import { SectionHeading } from '../ui/SectionHeading'
 import { Lightbox } from './Lightbox'
@@ -20,7 +20,7 @@ export function Photography({ items = photos }: { items?: Photo[] } = {}) {
   const [containerWidth, setContainerWidth] = useState(0)
   const containerRef = useRef<HTMLDivElement>(null)
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const el = containerRef.current
     if (!el) return
     const observer = new ResizeObserver(([entry]) => {
@@ -54,38 +54,41 @@ export function Photography({ items = photos }: { items?: Photo[] } = {}) {
       </div>
 
       <div className="max-w-[1600px] mx-auto px-4">
-        <div ref={containerRef}>
-        {fallback
-          ? items.map((photo, i) => (
-              <Tile
-                key={photo.id}
-                photo={photo}
-                photoIndex={i}
-                width={photo.w}
-                height={photo.h}
-                onOpen={setIndex}
-              />
-            ))
-          : rows.map((row, r) => (
-              <div
-                key={r}
-                className="flex"
-                style={{ gap: `${GUTTER}px`, marginBottom: `${GUTTER}px` }}
-              >
-                {row.tiles.map((tile) => (
-                  <Tile
-                    key={items[tile.index].id}
-                    photo={items[tile.index]}
-                    photoIndex={tile.index}
-                    width={tile.width}
-                    height={tile.height}
-                    eager={r === 0}
-                    onOpen={setIndex}
-                  />
-                ))}
-              </div>
-            ))}
-        </div>
+        <Reveal>
+          <div ref={containerRef}>
+          {fallback
+            ? items.map((photo, i) => (
+                <Tile
+                  key={photo.id}
+                  photo={photo}
+                  photoIndex={i}
+                  fluid
+                  sizes="100vw"
+                  onOpen={setIndex}
+                />
+              ))
+            : rows.map((row, r) => (
+                <div
+                  key={r}
+                  className="flex"
+                  style={{ gap: `${GUTTER}px`, marginBottom: `${GUTTER}px` }}
+                >
+                  {row.tiles.map((tile) => (
+                    <Tile
+                      key={items[tile.index].id}
+                      photo={items[tile.index]}
+                      photoIndex={tile.index}
+                      width={tile.width}
+                      height={tile.height}
+                      sizes={`${Math.round(tile.width)}px`}
+                      eager={r === 0}
+                      onOpen={setIndex}
+                    />
+                  ))}
+                </div>
+              ))}
+          </div>
+        </Reveal>
       </div>
 
       <Lightbox photos={items} index={index} onClose={() => setIndex(null)} onChange={setIndex} />
@@ -96,6 +99,8 @@ export function Photography({ items = photos }: { items?: Photo[] } = {}) {
 function Tile({
   photo,
   photoIndex,
+  sizes,
+  fluid = false,
   width,
   height,
   eager = false,
@@ -103,25 +108,34 @@ function Tile({
 }: {
   photo: Photo
   photoIndex: number
-  width: number
-  height: number
+  /** Passed straight through to the `sizes` attribute on every source/img. */
+  sizes: string
+  /** Fill the container width and derive height from aspect ratio, instead of
+   * painting fixed pixel dimensions. Used before the row layout is known. */
+  fluid?: boolean
+  width?: number
+  height?: number
   eager?: boolean
   onOpen: (i: number) => void
 }) {
+  const style = fluid
+    ? { width: '100%', aspectRatio: `${photo.w} / ${photo.h}`, backgroundImage: `url(${photo.lqip})` }
+    : { width: `${width}px`, height: `${height}px`, backgroundImage: `url(${photo.lqip})` }
+
   return (
     <button
       onClick={() => onOpen(photoIndex)}
       aria-label={`Open photo: ${photo.alt}`}
-      style={{ width: `${width}px`, height: `${height}px`, backgroundImage: `url(${photo.lqip})` }}
+      style={style}
       className="group relative shrink-0 overflow-hidden rounded-[6px] bg-cover bg-center cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
     >
       <picture>
-        <source srcSet={photoSrcSet(photo, 'avif')} sizes={`${Math.round(width)}px`} type="image/avif" />
-        <source srcSet={photoSrcSet(photo, 'webp')} sizes={`${Math.round(width)}px`} type="image/webp" />
+        <source srcSet={photoSrcSet(photo, 'avif')} sizes={sizes} type="image/avif" />
+        <source srcSet={photoSrcSet(photo, 'webp')} sizes={sizes} type="image/webp" />
         <img
           src={photoUrl(photo.id, photo.widths[0], 'jpg')}
           srcSet={photoSrcSet(photo, 'jpg')}
-          sizes={`${Math.round(width)}px`}
+          sizes={sizes}
           alt={photo.alt}
           width={photo.w}
           height={photo.h}

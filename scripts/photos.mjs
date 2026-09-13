@@ -12,7 +12,15 @@ import { readdir, stat, mkdir, writeFile, readFile } from 'node:fs/promises'
 import path from 'node:path'
 import sharp from 'sharp'
 import exifr from 'exifr'
-import { WIDTHS, FORMATS, parseFolder, resolveAlt, buildManifest, widthsFor } from './photos-lib.mjs'
+import {
+  WIDTHS,
+  FORMATS,
+  parseFolder,
+  resolveAlt,
+  buildManifest,
+  widthsFor,
+  orientedSize,
+} from './photos-lib.mjs'
 
 const ROOT = process.cwd()
 const SRC_DIR = path.join(ROOT, 'photos')
@@ -67,10 +75,7 @@ async function processFile(folder, fileName, place, year, overrides) {
 
   const pipeline = sharp(originalPath).rotate() // honour EXIF orientation
   const meta = await pipeline.metadata()
-  // .rotate() swaps width/height for 90/270-degree orientations
-  const swapped = meta.orientation !== undefined && meta.orientation >= 5
-  const w = swapped ? meta.height : meta.width
-  const h = swapped ? meta.width : meta.height
+  const { w, h } = orientedSize(meta)
 
   if (!w || !h) {
     console.warn(`  skipped ${id}: could not read dimensions`)

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { render, screen, act } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { Photography } from './Photography'
 import type { Photo } from '../../data/photos-manifest'
@@ -70,5 +70,50 @@ describe('Photography grid', () => {
   it('renders no tiles when there are no photos', () => {
     render(<Photography items={[]} />)
     expect(screen.queryAllByRole('button')).toHaveLength(0)
+  })
+
+  it('does not request natural-resolution images before measurement', () => {
+    render(<Photography items={fixture} />)
+    const img = screen.getByAltText('Canal at dusk') as HTMLImageElement
+    expect(img.getAttribute('sizes')).not.toMatch(/^\d{4,}px$/)
+  })
+
+  it('lays photos into justified rows once the container is measured', () => {
+    const callbacks: ResizeObserverCallback[] = []
+    const original = global.ResizeObserver
+    // Structurally satisfies the DOM ResizeObserver type, same as the setup.ts mock.
+    global.ResizeObserver = class {
+      constructor(cb: ResizeObserverCallback) {
+        callbacks.push(cb)
+      }
+      observe() {}
+      unobserve() {}
+      disconnect() {}
+    }
+
+    try {
+      const { container } = render(<Photography items={fixture} />)
+      act(() => {
+        callbacks[0](
+          [{ contentRect: { width: 1200 } }] as unknown as ResizeObserverEntry[],
+          {} as ResizeObserver,
+        )
+      })
+
+      const tiles = screen.getAllByRole('button')
+      expect(tiles).toHaveLength(fixture.length)
+
+      const firstWidth = Number.parseFloat((tiles[0] as HTMLElement).style.width)
+      expect(firstWidth).toBeGreaterThan(0)
+      expect(firstWidth).toBeLessThan(1200)
+
+      // Row tiles get a pixel-based sizes attribute matching their computed width.
+      const img = screen.getByAltText('Canal at dusk') as HTMLImageElement
+      expect(img.getAttribute('sizes')).toBe(`${Math.round(firstWidth)}px`)
+
+      expect(container.querySelectorAll('.flex').length).toBeGreaterThan(0)
+    } finally {
+      global.ResizeObserver = original
+    }
   })
 })
