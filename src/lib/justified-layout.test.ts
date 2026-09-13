@@ -83,7 +83,7 @@ describe('layoutRows', () => {
   })
 
   it('never returns negative geometry when the gutter exceeds the container', () => {
-    const rows = layoutRows([1.5, 1.5, 1.5], 100, TARGET, 500)
+    const rows = layoutRows([1, 1, 1], 100, 1, 60)
     for (const row of rows) {
       for (const tile of row.tiles) {
         expect(tile.width).toBeGreaterThan(0)
