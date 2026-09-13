@@ -3,21 +3,32 @@ import { StatCounter } from '../ui/StatCounter'
 import { useTypewriter } from '../../hooks/useTypewriter'
 import { roles } from '../../data/about'
 import { stats } from '../../data/stats'
+import { findPhoto, heroId, largestWidth, photoSrcSet, photoUrl } from '../../data/photos-manifest'
 
 const BASE = import.meta.env.BASE_URL
 
 export function Hero() {
   const role = useTypewriter(roles)
+  const hero = findPhoto(heroId)
 
   return (
-    <section id="hero" className="min-h-screen flex flex-col justify-center relative overflow-hidden">
-      {/* full-bleed darkened photo background */}
+    <section id="hero" className="min-h-[100dvh] flex flex-col justify-center relative overflow-hidden">
+      {/* full-bleed darkened photo background; falls back to the gradient alone */}
       <div className="absolute inset-0 z-0">
-        <img
-          src={`${BASE}images/photos/DSCF9258.JPG`}
-          alt=""
-          className="w-full h-full object-cover opacity-30 contrast-105 scale-105"
-        />
+        {hero && (
+          <picture>
+            <source srcSet={photoSrcSet(hero, 'avif')} sizes="100vw" type="image/avif" />
+            <source srcSet={photoSrcSet(hero, 'webp')} sizes="100vw" type="image/webp" />
+            <img
+              src={photoUrl(hero.id, largestWidth(hero), 'jpg')}
+              srcSet={photoSrcSet(hero, 'jpg')}
+              sizes="100vw"
+              alt=""
+              fetchPriority="high"
+              className="w-full h-full object-cover opacity-30 contrast-105 scale-105"
+            />
+          </picture>
+        )}
         <div
           className="absolute inset-0"
           style={{
