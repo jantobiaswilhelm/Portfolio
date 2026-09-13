@@ -22,3 +22,8 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Photo originals. Only generated derivatives under public/images/photos
+# and the manifest at src/data/photos.json are committed.
+photos/*
+!photos/.gitkeep
