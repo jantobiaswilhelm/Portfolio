@@ -1,0 +1,1064 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Prototype C — Shutter · Jan Wilhelm</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ==========================================================================
+   TOKENS
+   ========================================================================== */
+:root{
+  --bg:#08080a; --bg2:#0d0d10; --card:#131318;
+  --accent:#d4a853; --accent-h:#e5b964;
+  --tp:#ededf0; --ts:#9a9aa2; --tm:#63636c; --bd:#232329;
+  --rec:#e5484d;
+  --sans:'DM Sans',system-ui,-apple-system,sans-serif;
+  --head:'Space Grotesk','DM Sans',system-ui,sans-serif;
+  --mono:'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,monospace;
+  --ease-out:cubic-bezier(0.23,1,0.32,1);
+  --ease-in-out:cubic-bezier(0.77,0,0.175,1);
+  --gut:44px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{color-scheme:dark}
+html.lenis,html.lenis body{height:auto}
+.lenis.lenis-smooth{scroll-behavior:auto!important}
+.lenis.lenis-stopped{overflow:hidden}
+body{background:var(--bg);color:var(--tp);font-family:var(--sans);line-height:1.65;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+h1,h2,h3{font-family:var(--head);font-weight:700;line-height:1.05;letter-spacing:-.02em}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;text-align:inherit}
+a{color:inherit;text-decoration:none}
+img{display:block;max-width:100%}
+.accent{color:var(--accent)}
+.wrap{max-width:1180px;margin:0 auto;padding:0 32px}
+section{position:relative}
+.pad{padding:150px 0}
+:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+@media(max-width:700px){:root{--gut:20px}.wrap{padding:0 20px}.pad{padding:110px 0}}
+
+/* generic reveal */
+.rv{opacity:0;transform:translateY(24px);transition:opacity .7s var(--ease-out),transform .9s var(--ease-out);transition-delay:calc(var(--i,0) * 60ms)}
+.rv.in{opacity:1;transform:none}
+
+/* ==========================================================================
+   NAV
+   ========================================================================== */
+.nav{position:fixed;top:0;left:0;right:0;z-index:60;display:flex;align-items:center;justify-content:space-between;padding:22px var(--gut);transition:background-color .3s ease}
+.nav.scrolled{background:rgba(8,8,10,.62);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
+.logo{font-family:var(--head);font-weight:700;font-size:17px;letter-spacing:.04em}
+.links{display:flex;gap:26px;font-size:13px}
+.links button{display:flex;align-items:baseline;gap:6px;color:var(--ts);transition:color .2s ease}
+.links .n{font-family:var(--mono);font-size:10px;color:var(--tm);transition:color .2s ease}
+.links button[aria-current="true"]{color:var(--tp)}
+.links button[aria-current="true"] .n{color:var(--accent)}
+@media (hover:hover) and (pointer:fine){.links button:hover{color:var(--tp)}}
+@media(max-width:760px){.links{gap:12px}.links .l{display:none}.links .n{font-size:11px}}
+
+/* ==========================================================================
+   VIEWFINDER HUD
+   ========================================================================== */
+.hud{position:fixed;inset:0;z-index:50;pointer-events:none;font-family:var(--mono);font-size:11px;letter-spacing:.08em;color:rgba(237,237,240,.86);text-shadow:0 1px 2px rgba(0,0,0,.7)}
+.vignette{position:absolute;inset:0;background:radial-gradient(125% 95% at 50% 50%,transparent 60%,rgba(0,0,0,.34))}
+.corner{position:absolute;width:26px;height:26px;border:0 solid rgba(237,237,240,.5)}
+.c-tl{top:12px;left:12px;border-top-width:1.5px;border-left-width:1.5px}
+.c-tr{top:12px;right:12px;border-top-width:1.5px;border-right-width:1.5px}
+.c-bl{bottom:12px;left:12px;border-bottom-width:1.5px;border-left-width:1.5px}
+.c-br{bottom:12px;right:12px;border-bottom-width:1.5px;border-right-width:1.5px}
+
+/* focus-ring ruler */
+.ruler{position:absolute;top:76px;left:50%;width:min(420px,60vw);height:30px;transform:translateX(-50%);overflow:hidden;
+  -webkit-mask-image:linear-gradient(90deg,transparent,#000 24%,#000 76%,transparent);mask-image:linear-gradient(90deg,transparent,#000 24%,#000 76%,transparent)}
+.ruler-track{position:absolute;top:0;left:0;height:100%;will-change:transform}
+.ruler-ticks{position:absolute;top:0;height:6px;background:repeating-linear-gradient(90deg,rgba(237,237,240,.42) 0 1px,transparent 1px 9px)}
+.ruler-label{position:absolute;top:0;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;font-size:10px;line-height:1;color:rgba(237,237,240,.72)}
+.ruler-label::before{content:'';width:1px;height:11px;margin-bottom:4px;background:rgba(237,237,240,.85)}
+.ruler-caret{position:absolute;top:0;left:50%;width:2px;height:15px;margin-left:-1px;background:var(--accent);box-shadow:0 0 8px rgba(212,168,83,.8)}
+@media(max-width:700px){.ruler{top:66px;height:14px}.ruler-label{display:none}}
+
+/* bottom readout */
+.hud-shade{position:absolute;left:0;right:0;bottom:0;height:170px;background:linear-gradient(0deg,rgba(8,8,10,.8),transparent)}
+.hud-bot{position:absolute;left:var(--gut);right:var(--gut);bottom:calc(66px + env(safe-area-inset-bottom,0px));display:flex;align-items:flex-end;justify-content:space-between;gap:16px}
+.hud-grp{display:flex;gap:20px;align-items:baseline;white-space:nowrap}
+.hk{color:rgba(237,237,240,.42);font-size:9px;margin-right:5px}
+.hvc{display:inline-block;overflow:hidden;vertical-align:bottom}
+.hv{display:inline-block;transition:color .5s ease}
+.hv.tick{color:var(--accent);transition-duration:0s}
+.meter{position:relative;width:230px;padding-bottom:10px}
+.meter-scale{display:flex;justify-content:space-between;align-items:baseline;font-size:9px;color:rgba(237,237,240,.6)}
+.meter-scale i{font-style:normal;color:rgba(237,237,240,.3)}
+.meter-scale .z{color:var(--tp)}
+.meter-needle{position:absolute;left:50%;bottom:0;width:2px;height:7px;margin-left:-1px;background:var(--accent);box-shadow:0 0 6px rgba(212,168,83,.9);will-change:transform}
+.rec-dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--accent);margin-right:6px;vertical-align:1px}
+@media(max-width:980px){.meter{display:none}}
+@media(max-width:700px){.hud{font-size:10px}.hud-grp{gap:11px}.hud-bot{bottom:calc(60px + env(safe-area-inset-bottom,0px))}.hide-sm{display:none}}
+
+/* ==========================================================================
+   IRIS · FLASH · REDUCED FADER
+   ========================================================================== */
+.iris{position:fixed;inset:0;z-index:8000;visibility:hidden;pointer-events:none}
+.iris.on{visibility:visible;pointer-events:auto}
+.iris svg{width:100%;height:100%;display:block}
+.iris-lbl{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font:500 11px var(--mono);letter-spacing:.2em;color:var(--accent);white-space:nowrap}
+.iris-lbl .blink{animation:blink 1s steps(2,jump-none) infinite}
+@keyframes blink{50%{opacity:0}}
+.flash{position:fixed;inset:0;z-index:8100;background:#fff;opacity:0;pointer-events:none}
+.fader{position:fixed;inset:0;z-index:8000;background:var(--bg);opacity:0;pointer-events:none}
+
+/* ==========================================================================
+   HERO · RACK FOCUS
+   ========================================================================== */
+.hero{min-height:100svh;display:flex;align-items:center;overflow:hidden;padding:130px 0 170px}
+@media (hover:hover) and (pointer:fine){.hero{cursor:crosshair}}
+.hero-media{position:absolute;inset:0;opacity:.5}
+.hero-media img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.hero-soft{filter:blur(14px) saturate(.9);transform:scale(1.08);opacity:0;will-change:opacity}
+.hero-scrim{position:absolute;inset:0;background:linear-gradient(180deg,rgba(8,8,10,.35) 0%,rgba(8,8,10,.1) 45%,var(--bg) 100%)}
+.hero-inner{position:relative;z-index:2;width:100%;display:grid;grid-template-columns:1.3fr .7fr;gap:64px;align-items:center}
+.eyebrow{font-family:var(--head);color:var(--accent);letter-spacing:.3em;text-transform:uppercase;font-size:12px;margin-bottom:26px;display:flex;align-items:center;gap:14px}
+.eyebrow::before{content:'';width:44px;height:1px;background:var(--accent)}
+.hero-name{font-size:clamp(56px,11vw,148px);letter-spacing:-.04em;margin-bottom:12px;will-change:filter}
+.role{font-family:var(--head);font-weight:500;font-size:clamp(20px,3vw,32px);color:var(--ts);margin-bottom:34px;min-height:1.3em}
+.role .w{display:inline-block;color:var(--accent)}
+.lede{max-width:520px;color:var(--ts);font-size:17px;margin-bottom:40px}
+.stats{display:flex;gap:48px;flex-wrap:wrap}
+.stat b{display:block;font-family:var(--head);font-size:36px;font-weight:700;line-height:1.15;font-variant-numeric:tabular-nums}
+.stat span{font-family:var(--mono);font-size:10px;letter-spacing:.14em;color:var(--tm);text-transform:uppercase}
+.portrait{position:relative;aspect-ratio:4/5;border-radius:18px;overflow:hidden;border:1px solid var(--bd);box-shadow:0 34px 90px rgba(0,0,0,.55);cursor:default}
+.portrait img{width:100%;height:100%;object-fit:cover;filter:grayscale(1) contrast(1.05);transition:filter .7s ease}
+@media (hover:hover) and (pointer:fine){.portrait:hover img{filter:grayscale(0) contrast(1.05)}}
+.thirds{position:absolute;inset:0;pointer-events:none;background:
+  linear-gradient(90deg,transparent calc(33.333% - .5px),rgba(255,255,255,.14) calc(33.333% - .5px) calc(33.333% + .5px),transparent calc(33.333% + .5px) calc(66.666% - .5px),rgba(255,255,255,.14) calc(66.666% - .5px) calc(66.666% + .5px),transparent calc(66.666% + .5px)),
+  linear-gradient(180deg,transparent calc(33.333% - .5px),rgba(255,255,255,.14) calc(33.333% - .5px) calc(33.333% + .5px),transparent calc(33.333% + .5px) calc(66.666% - .5px),rgba(255,255,255,.14) calc(66.666% - .5px) calc(66.666% + .5px),transparent calc(66.666% + .5px))}
+.portrait figcaption{position:absolute;left:14px;bottom:12px;font:500 10px var(--mono);letter-spacing:.14em;color:rgba(237,237,240,.75)}
+.hero-hint{position:absolute;left:var(--gut);bottom:120px;z-index:2;font:500 10px var(--mono);letter-spacing:.18em;color:var(--tm);display:flex;gap:18px}
+@media(max-width:860px){.hero-inner{grid-template-columns:1fr;gap:40px}.portrait{max-width:240px;order:-1}.hero-hint{display:none}}
+
+/* AF point */
+.af-pt{position:absolute;left:0;top:0;width:72px;height:72px;margin:-36px 0 0 -36px;z-index:5;pointer-events:none;color:rgba(237,237,240,.75);will-change:transform}
+.af-pt .box{position:absolute;inset:0;transition:color .2s ease}
+.af-pt.locked .box{color:var(--accent)}
+.af-pt.hunting .box{animation:hunt .15s ease-in-out infinite alternate}
+@keyframes hunt{to{transform:scale(1.07)}}
+.brk i{position:absolute;width:14px;height:14px;border:0 solid currentColor}
+.brk i:nth-child(1){top:0;left:0;border-top-width:2px;border-left-width:2px}
+.brk i:nth-child(2){top:0;right:0;border-top-width:2px;border-right-width:2px}
+.brk i:nth-child(3){bottom:0;left:0;border-bottom-width:2px;border-left-width:2px}
+.brk i:nth-child(4){bottom:0;right:0;border-bottom-width:2px;border-right-width:2px}
+.af-pt .lbl{position:absolute;top:100%;left:0;margin-top:7px;font:500 10px var(--mono);letter-spacing:.1em;color:var(--accent);white-space:nowrap;opacity:0;transition:opacity .2s ease}
+.af-pt.locked .lbl{opacity:1}
+
+/* ==========================================================================
+   SECTION HEADINGS · AF LOCK
+   ========================================================================== */
+.sh{display:flex;align-items:baseline;gap:20px;margin-bottom:56px}
+.sh-num{font-family:var(--mono);color:var(--accent);font-size:13px}
+.sh-title{position:relative;font-size:clamp(34px,6vw,64px)}
+.af{position:absolute;inset:-8px -18px -4px;pointer-events:none;color:var(--tm);opacity:0;transform:scale(1.3);transition:transform 280ms var(--ease-out),opacity 200ms ease,color 200ms ease}
+.af i{width:12px;height:12px}
+.af.brk i{border-width:0}
+.af.brk i:nth-child(1){border-top-width:1.5px;border-left-width:1.5px}
+.af.brk i:nth-child(2){border-top-width:1.5px;border-right-width:1.5px}
+.af.brk i:nth-child(3){border-bottom-width:1.5px;border-left-width:1.5px}
+.af.brk i:nth-child(4){border-bottom-width:1.5px;border-right-width:1.5px}
+.sh.locked .af{opacity:1;transform:scale(1);color:var(--accent)}
+.sh-line{flex:1;height:1px;align-self:center;background:var(--bd);transform-origin:left;transform:scaleX(0);transition:transform 1.1s var(--ease-out)}
+.sh.in .sh-line{transform:scaleX(1)}
+.af-tag{align-self:center;font:500 10px var(--mono);letter-spacing:.12em;color:var(--accent);white-space:nowrap;opacity:0;transform:translateX(-6px);transition:opacity .2s ease,transform .28s var(--ease-out)}
+.sh.locked .af-tag{opacity:1;transform:none}
+@media(max-width:600px){.af-tag{display:none}.sh{gap:14px;margin-bottom:40px}}
+
+/* ==========================================================================
+   ABOUT
+   ========================================================================== */
+.about-grid{display:grid;grid-template-columns:1.1fr .9fr;gap:64px;align-items:center}
+.statement{font-family:var(--head);font-weight:500;font-size:clamp(22px,3vw,30px);line-height:1.35;letter-spacing:-.01em}
+.bio{color:var(--ts);margin-top:20px}
+.qmenu{border:1px solid var(--bd);border-radius:16px;padding:16px;background:rgba(255,255,255,.015)}
+.qmenu-head{display:flex;justify-content:space-between;font:500 10px var(--mono);letter-spacing:.14em;color:var(--tm);margin-bottom:12px;padding:0 4px}
+.qgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.qcell{padding:16px;border:1px solid var(--bd);border-radius:10px;transition:border-color .2s ease,transform .3s var(--ease-out)}
+.qcell .k{font:500 10px var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--tm);margin-bottom:6px}
+.qcell .v{font-family:var(--head);font-size:17px}
+@media (hover:hover) and (pointer:fine){.qcell:hover{border-color:rgba(212,168,83,.5);transform:translateY(-2px)}}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:64px}
+.chip{font:500 11px var(--mono);letter-spacing:.06em;color:var(--ts);border:1px solid var(--bd);padding:6px 11px;border-radius:999px}
+@media(max-width:860px){.about-grid{grid-template-columns:1fr;gap:40px}}
+
+/* ==========================================================================
+   WORK
+   ========================================================================== */
+.rows{border-top:1px solid var(--bd)}
+.row{border-bottom:1px solid var(--bd)}
+.row-btn{width:100%;display:grid;grid-template-columns:64px 1fr auto 24px;gap:24px;align-items:center;padding:30px 0}
+.row-num{font-family:var(--mono);font-size:12px;color:var(--tm);transition:color .2s ease;display:flex;align-items:center;gap:8px}
+.rec{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--rec);opacity:0;transition:opacity .2s ease}
+.row.open .rec{opacity:1;animation:blink 1.1s steps(2,jump-none) infinite}
+.row-title{display:block;font-family:var(--head);font-weight:700;font-size:clamp(21px,3vw,30px);line-height:1.15;transition:color .2s ease,transform .35s var(--ease-out)}
+.row-tag{display:block;color:var(--ts);font-size:14px;margin-top:3px}
+.row-meta{display:flex;flex-direction:column;align-items:flex-end;gap:8px}
+.row-year{font-family:var(--mono);font-size:12px;color:var(--accent)}
+.row-stack{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;max-width:300px}
+.row-stack span{font-size:11px;color:var(--ts);border:1px solid var(--bd);padding:1px 8px;border-radius:999px}
+.pm{position:relative;width:16px;height:16px;justify-self:end}
+.pm::before,.pm::after{content:'';position:absolute;left:0;top:50%;width:16px;height:1.5px;margin-top:-.75px;background:var(--tm);transition:transform .28s var(--ease-out),background-color .2s ease}
+.pm::after{transform:rotate(90deg)}
+.row.open .pm::after{transform:rotate(90deg) scaleX(0)}
+.row.open .pm::before{background:var(--accent)}
+.row.open .row-title{color:var(--accent)}
+@media (hover:hover) and (pointer:fine){.row-btn:hover .row-title{transform:translateX(10px)}.row-btn:hover .row-num{color:var(--accent)}}
+.acc{display:grid;grid-template-rows:0fr;transition:grid-template-rows 380ms var(--ease-out)}
+.row.open .acc{grid-template-rows:1fr}
+.acc>div{overflow:hidden;min-height:0}
+.acc-body{padding:0 0 40px 88px;max-width:900px;opacity:0;transform:translateY(-8px);transition:opacity 180ms ease,transform 300ms var(--ease-out)}
+.row.open .acc-body{opacity:1;transform:none;transition-delay:90ms}
+.acc-body p{color:var(--ts);margin-bottom:18px}
+.acc-body ul{list-style:none;display:flex;flex-direction:column;gap:7px;margin-bottom:22px}
+.acc-body li{font-size:14px;padding-left:20px;position:relative}
+.acc-body li::before{content:'→';position:absolute;left:0;color:var(--accent)}
+.previews{display:flex;gap:12px;flex-wrap:wrap}
+.previews img{width:180px;height:110px;object-fit:cover;border-radius:8px;border:1px solid var(--bd)}
+@media(max-width:760px){.row-btn{grid-template-columns:40px 1fr 20px;gap:14px}.row-meta{display:none}.acc-body{padding-left:54px}}
+
+/* ==========================================================================
+   PHOTOGRAPHY · PINNED FILM STRIP
+   ========================================================================== */
+.film-sticky{position:sticky;top:0;height:100vh;overflow:hidden;display:flex;flex-direction:column;padding-top:112px}
+.film-sticky .sh{margin-bottom:18px}
+.film-meta{display:flex;justify-content:space-between;gap:16px;font:500 11px var(--mono);letter-spacing:.1em;color:var(--ts)}
+.film-meta b{color:var(--accent);font-weight:500}
+.film-stage{flex:1;min-height:0;display:flex;flex-direction:column;justify-content:center;padding-bottom:120px}
+.film-scroller{overflow:hidden}
+.rail{--fh:clamp(190px,48vh,580px);position:relative;display:flex;gap:14px;width:max-content;padding:46px 0 32px;background:#12110f;will-change:transform}
+.rail::before,.rail::after{content:'';position:absolute;left:0;right:0;height:14px;background-repeat:repeat-x;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='14'%3E%3Crect x='6' y='1' width='12' height='12' rx='2.5' fill='%2308080a'/%3E%3C/svg%3E")}
+.rail::before{top:6px}
+.rail::after{bottom:9px}
+.frame{position:relative;flex:none;height:var(--fh);width:calc(var(--fh) * var(--ar));display:block}
+.frame-inner{position:absolute;inset:0;overflow:hidden;background:#1b1a18;transform-origin:50% 50%;will-change:transform}
+.frame-inner img{width:100%;height:100%;object-fit:cover}
+.shade{position:absolute;inset:0;background:#000;opacity:.6;pointer-events:none}
+.edge{position:absolute;left:2px;top:-24px;font:500 9px var(--mono);letter-spacing:.14em;color:rgba(212,168,83,.8);white-space:nowrap;pointer-events:none}
+.film-bar{height:1px;background:var(--bd);margin-top:26px;position:relative}
+.film-bar i{position:absolute;inset:0;background:var(--accent);transform-origin:left;transform:scaleX(0)}
+@media (hover:hover) and (pointer:fine){.frame:hover .shade{opacity:0!important}}
+@media(max-width:700px){.film-sticky{padding-top:96px}.rail{--fh:clamp(180px,42vh,420px)}.film-meta .hide-sm{display:none}}
+
+/* ==========================================================================
+   TRAVEL
+   ========================================================================== */
+.trips{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+.trip{position:relative;padding:26px;border:1px solid var(--bd);border-radius:16px;background:rgba(255,255,255,.015);transition:border-color .25s ease,transform .35s var(--ease-out)}
+@media (hover:hover) and (pointer:fine){.trip:hover{border-color:rgba(212,168,83,.35);transform:translateY(-4px)}}
+.trip .yr{position:absolute;top:24px;right:24px;font:500 11px var(--mono);color:var(--tm)}
+.trip img{width:42px;height:29px;border-radius:5px;object-fit:cover;border:1px solid var(--bd);margin-bottom:18px}
+.trip h3{font-size:26px;margin-bottom:4px}
+.trip .city{color:var(--ts);font-size:14px;margin-bottom:18px}
+.trip .type{font:500 11px var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--accent)}
+@media(max-width:800px){.trips{grid-template-columns:1fr}}
+
+/* ==========================================================================
+   CONTACT · SHUTTER BUTTON
+   ========================================================================== */
+.contact{text-align:center;padding:150px 0 230px}
+.contact .sh-num{display:block}
+.contact h2{font-size:clamp(44px,9vw,120px);letter-spacing:-.04em;margin:22px 0}
+.contact p{color:var(--ts);max-width:460px;margin:0 auto;font-size:17px}
+.shutter-btn{position:relative;display:grid;place-items:center;width:132px;height:132px;margin:44px auto 36px;border-radius:50%;border:1px solid var(--bd);transition:transform 140ms var(--ease-out),border-color .2s ease}
+.shutter-btn::before{content:'';position:absolute;inset:12px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#2c2c33,#111114 72%);border:1px solid #2a2a30;box-shadow:inset 0 -6px 14px rgba(0,0,0,.6),0 10px 30px rgba(0,0,0,.5);transition:box-shadow .25s ease}
+.shutter-btn span{position:relative;font:500 11px var(--mono);letter-spacing:.2em;color:var(--tp)}
+.shutter-btn:active{transform:scale(.94)}
+@media (hover:hover) and (pointer:fine){.shutter-btn:hover{border-color:var(--accent)}.shutter-btn:hover::before{box-shadow:inset 0 -6px 14px rgba(0,0,0,.6),0 0 34px rgba(212,168,83,.25)}}
+.socials{display:flex;justify-content:center;gap:10px;flex-wrap:wrap}
+.socials a{font:500 12px var(--mono);letter-spacing:.08em;color:var(--ts);border:1px solid var(--bd);padding:10px 16px;border-radius:999px;transition:color .2s ease,border-color .2s ease}
+@media (hover:hover) and (pointer:fine){.socials a:hover{color:var(--accent);border-color:var(--accent)}}
+footer{border-top:1px solid var(--bd);padding:36px 20px 120px;text-align:center;font:500 11px var(--mono);letter-spacing:.14em;color:var(--tm)}
+
+/* ==========================================================================
+   LIGHTBOX
+   ========================================================================== */
+.lb{position:fixed;inset:0;z-index:7000;background:rgba(5,5,7,.96);display:flex;align-items:center;justify-content:center;outline:none}
+.lb[hidden]{display:none}
+.lb-fig{display:flex;flex-direction:column;align-items:center;gap:14px;padding:0 16px}
+.lb-img{max-width:min(88vw,1600px);max-height:78vh;object-fit:contain;border-radius:6px}
+.lb-cap{font:500 11px var(--mono);letter-spacing:.1em;color:var(--ts);text-align:center}
+.lb-cap b{color:var(--accent);font-weight:500}
+.lb-btn{position:absolute;color:var(--ts);padding:14px;line-height:1;transition:color .2s ease}
+.lb-close{top:16px;right:18px;font-size:22px}
+.lb-prev,.lb-next{top:50%;transform:translateY(-50%);font-size:44px}
+.lb-prev{left:6px}.lb-next{right:6px}
+@media (hover:hover) and (pointer:fine){.lb-btn:hover{color:var(--accent)}}
+
+/* ==========================================================================
+   REDUCED MOTION — iris → crossfade, no pin, no focus pull, static HUD
+   ========================================================================== */
+@media (prefers-reduced-motion: reduce){
+  .rv{transform:none;transition:opacity .4s ease}
+  .af,.sh-line{transition:opacity .2s ease}
+  .af{transform:none}
+  .sh-line{transform:none}
+  .film-sec{height:auto!important}
+  .film-sticky{position:relative;height:auto!important;padding:150px 0 60px}
+  .film-stage{padding-bottom:0}
+  .film-scroller{overflow-x:auto;scroll-snap-type:x mandatory}
+  .frame{scroll-snap-align:center}
+  .shade{opacity:0!important}
+  .af-pt.hunting .box{animation:none}
+  .row-title,.trip,.qcell,.acc,.acc-body,.pm::before,.pm::after{transition-duration:.01ms}
+  .iris-lbl .blink,.row.open .rec{animation:none}
+}
+</style>
+</head>
+<body>
+
+<!-- ============================ NAV ============================ -->
+<nav class="nav" id="nav" aria-label="Sections">
+  <button class="logo" data-target="hero">JAN WILHELM<span class="accent">.</span></button>
+  <div class="links" id="links"></div>
+</nav>
+
+<!-- ============================ HUD ============================ -->
+<div class="hud" aria-hidden="true">
+  <div class="vignette"></div>
+  <div class="corner c-tl"></div><div class="corner c-tr"></div><div class="corner c-bl"></div><div class="corner c-br"></div>
+  <div class="ruler" id="ruler">
+    <div class="ruler-track" id="ruler-track"><div class="ruler-ticks" id="ruler-ticks"></div></div>
+    <div class="ruler-caret"></div>
+  </div>
+  <div class="hud-shade"></div>
+  <div class="hud-bot">
+    <div class="hud-grp">
+      <span class="hide-sm"><span class="hk">SS</span><span class="hvc"><span class="hv" id="h-shutter">1/250</span></span></span>
+      <span><span class="hvc"><span class="hv" id="h-ap">F5</span></span></span>
+      <span><span class="hk">ISO</span><span class="hvc"><span class="hv" id="h-iso">160</span></span></span>
+      <span><span class="hvc"><span class="hv" id="h-focal">55mm</span></span></span>
+    </div>
+    <div class="meter" id="meter">
+      <div class="meter-scale" id="meter-scale"></div>
+      <div class="meter-needle" id="meter-needle"></div>
+    </div>
+    <div class="hud-grp">
+      <span class="hide-sm"><span class="hvc"><span class="hv" id="h-place">OESCHINENSEE</span></span></span>
+      <span><span class="hk">FRAME</span><span class="hvc"><span class="hv" id="h-frame">01 / 06</span></span></span>
+      <span class="hide-sm"><span class="rec-dot"></span><span class="hvc"><span class="hv" id="h-shots">000</span></span></span>
+    </div>
+  </div>
+</div>
+
+<main id="main">
+  <!-- ============================ HERO ============================ -->
+  <section id="hero" class="hero">
+    <div class="hero-media" aria-hidden="true">
+      <img class="hero-sharp" id="hero-sharp" alt="" fetchpriority="high">
+      <img class="hero-soft" id="hero-soft" alt="">
+    </div>
+    <div class="hero-scrim" aria-hidden="true"></div>
+    <div class="af-pt hunting" id="af-pt" aria-hidden="true">
+      <div class="box brk"><i></i><i></i><i></i><i></i></div>
+      <div class="lbl" id="af-lbl">AF-S ●</div>
+    </div>
+    <div class="wrap hero-inner">
+      <div class="hero-copy" id="hero-copy">
+        <div class="eyebrow">Basel, Switzerland</div>
+        <h1 class="hero-name" id="hero-name">Jan<br>Wilhelm<span class="accent">.</span></h1>
+        <div class="role">I'm a <span class="w" id="role">Developer</span></div>
+        <p class="lede">Full-stack developer, Fujifilm photographer and MSc student. I build digital products where design, engineering and people meet — and capture the moments in between.</p>
+        <div class="stats" id="stats"></div>
+      </div>
+      <figure class="portrait" id="portrait">
+        <img id="portrait-img" alt="Jan Wilhelm">
+        <div class="thirds" aria-hidden="true"></div>
+        <figcaption>JW · BASEL · 2026</figcaption>
+      </figure>
+    </div>
+    <div class="hero-hint" aria-hidden="true"><span>◎ POINT / TAP TO FOCUS</span><span>↓ SCROLL</span></div>
+  </section>
+
+  <!-- ============================ ABOUT ============================ -->
+  <section id="about" class="pad">
+    <div class="wrap">
+      <div class="sh rv"><span class="sh-num">01</span><h2 class="sh-title">About<span class="af brk" aria-hidden="true"><i></i><i></i><i></i><i></i></span></h2><span class="sh-line"></span><span class="af-tag" aria-hidden="true">● AF LOCK</span></div>
+      <div class="about-grid">
+        <div class="rv">
+          <p class="statement" id="statement"></p>
+          <p class="bio" id="bio"></p>
+        </div>
+        <div class="qmenu rv" style="--i:2">
+          <div class="qmenu-head"><span>Q · MY SETTINGS</span><span>1 / 1</span></div>
+          <div class="qgrid" id="facts"></div>
+        </div>
+      </div>
+      <div class="chips rv" id="chips"></div>
+    </div>
+  </section>
+
+  <!-- ============================ WORK ============================ -->
+  <section id="work" class="pad">
+    <div class="wrap">
+      <div class="sh rv"><span class="sh-num">02</span><h2 class="sh-title">Selected Work<span class="af brk" aria-hidden="true"><i></i><i></i><i></i><i></i></span></h2><span class="sh-line"></span><span class="af-tag" aria-hidden="true">● AF LOCK</span></div>
+      <div class="rows" id="rows"></div>
+    </div>
+  </section>
+
+  <!-- ============================ PHOTOGRAPHY ============================ -->
+  <section id="photography" class="film-sec">
+    <div class="film-sticky" id="film-sticky">
+      <div class="wrap">
+        <div class="sh" id="film-sh"><span class="sh-num">03</span><h2 class="sh-title">Photography<span class="af brk" aria-hidden="true"><i></i><i></i><i></i><i></i></span></h2><span class="sh-line"></span><span class="af-tag" aria-hidden="true">● AF-C TRACKING</span></div>
+        <div class="film-meta"><span>FRAME <b id="film-count">01</b> / <span id="film-total">29</span> · <span id="film-place">OESCHINENSEE</span></span><span class="hide-sm">SCROLL TO ADVANCE ▸</span></div>
+      </div>
+      <div class="film-stage">
+        <div class="film-scroller" id="film-scroller"><div class="rail" id="rail"></div></div>
+        <div class="wrap" style="width:100%"><div class="film-bar"><i id="film-bar"></i></div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================ TRAVEL ============================ -->
+  <section id="travel" class="pad">
+    <div class="wrap">
+      <div class="sh rv"><span class="sh-num">04</span><h2 class="sh-title">Travel<span class="af brk" aria-hidden="true"><i></i><i></i><i></i><i></i></span></h2><span class="sh-line"></span><span class="af-tag" aria-hidden="true">● AF LOCK</span></div>
+      <div class="trips" id="trips"></div>
+    </div>
+  </section>
+
+  <!-- ============================ CONTACT ============================ -->
+  <section id="contact" class="contact">
+    <div class="wrap">
+      <span class="sh-num rv">05</span>
+      <h2 class="rv">Let's build<br>something<span class="accent">.</span></h2>
+      <p class="rv">Open to collaborations, freelance work and good conversations.</p>
+      <a class="shutter-btn rv" id="shutter-btn" href="mailto:jan.tobias.wilhelm@gmail.com" aria-label="Email Jan"><span>SAY HI</span></a>
+      <div class="socials rv" id="socials"></div>
+    </div>
+  </section>
+</main>
+<footer>JAN WILHELM · BASEL, SWITZERLAND · SHOT ON FUJIFILM, BUILT BY HAND</footer>
+
+<!-- ============================ LIGHTBOX ============================ -->
+<div class="lb" id="lb" role="dialog" aria-modal="true" aria-label="Photo viewer" tabindex="-1" hidden>
+  <button class="lb-btn lb-close" id="lb-close" aria-label="Close">✕</button>
+  <button class="lb-btn lb-prev" id="lb-prev" aria-label="Previous photo">‹</button>
+  <figure class="lb-fig" id="lb-fig"><img class="lb-img" id="lb-img" alt=""><figcaption class="lb-cap" id="lb-cap"></figcaption></figure>
+  <button class="lb-btn lb-next" id="lb-next" aria-label="Next photo">›</button>
+</div>
+
+<!-- ============================ IRIS / FLASH ============================ -->
+<div class="iris on" id="iris" aria-hidden="true">
+  <svg id="iris-svg" preserveAspectRatio="none">
+    <defs>
+      <linearGradient id="blade-grad" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="0" y2="260">
+        <stop offset="0" stop-color="#26252b"/>
+        <stop offset=".06" stop-color="#16161a"/>
+        <stop offset="1" stop-color="#09090b"/>
+      </linearGradient>
+      <clipPath id="iris-clip" clipPathUnits="userSpaceOnUse"><polygon id="iris-clip-poly" points="0,0 0,0 0,0"/></clipPath>
+    </defs>
+    <g id="iris-rot"></g>
+  </svg>
+  <div class="iris-lbl" id="iris-lbl">LOADING FRAME 01<span class="blink">_</span></div>
+</div>
+<div class="fader" id="fader" aria-hidden="true"></div>
+<div class="flash" id="flash" aria-hidden="true"></div>
+
+<script src="motion-data.js"></script>
+<script src="https://unpkg.com/lenis@1.1.14/dist/lenis.min.js"></script>
+<script>
+(() => {
+  const P = window.PORTFOLIO
+  const $ = (s, r = document) => r.querySelector(s)
+  const $$ = (s, r = document) => [...r.querySelectorAll(s)]
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches
+  const clamp = (v, a = 0, b = 1) => Math.min(b, Math.max(a, v))
+  const pad2 = (n) => String(n).padStart(2, '0')
+  const pad3 = (n) => String(n).padStart(3, '0')
+  const wait = (ms) => new Promise((r) => setTimeout(r, ms))
+  // WAAPI `finished` never settles while a tab is hidden; never let UI state hang on it
+  const done = (anim) => Promise.race([anim.finished.catch(() => {}), wait(anim.effect.getTiming().duration + 60)])
+
+  /* ------------------------------------------------------------------ easing
+     Same curves as the CSS tokens, solved in JS for the SVG iris tweens. */
+  function bezier(x1, y1, x2, y2) {
+    const cx = 3 * x1, bx = 3 * (x2 - x1) - cx, ax = 1 - cx - bx
+    const cy = 3 * y1, by = 3 * (y2 - y1) - cy, ay = 1 - cy - by
+    const sx = (t) => ((ax * t + bx) * t + cx) * t
+    const sy = (t) => ((ay * t + by) * t + cy) * t
+    return (x) => {
+      if (x <= 0) return 0
+      if (x >= 1) return 1
+      let lo = 0, hi = 1, t = x
+      for (let i = 0; i < 24; i++) { if (sx(t) < x) lo = t; else hi = t; t = (lo + hi) / 2 }
+      return sy(t)
+    }
+  }
+  const easeOut = bezier(0.23, 1, 0.32, 1)
+  const easeInOut = bezier(0.77, 0, 0.175, 1)
+  const EASE_OUT_CSS = 'cubic-bezier(0.23, 1, 0.32, 1)'
+  function tween(ms, ease, fn) {
+    return new Promise((res) => {
+      const t0 = performance.now()
+      const step = (now) => {
+        const k = clamp((now - t0) / ms)
+        fn(ease(k))
+        if (k < 1) requestAnimationFrame(step); else res()
+      }
+      requestAnimationFrame(step)
+    })
+  }
+
+  /* ------------------------------------------------------------------ smooth scroll */
+  let lenis = null
+  if (!reduced && window.Lenis) {
+    lenis = new Lenis({ duration: 1.15, easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)) })
+  }
+  function lockScroll(on) {
+    if (on) { lenis?.stop(); document.body.style.overflow = 'hidden' }
+    else { lenis?.start(); document.body.style.overflow = '' }
+  }
+
+  /* ================================================================== CONTENT */
+  const SECTIONS = P.sections
+  const links = $('#links')
+  SECTIONS.forEach((s) => {
+    const b = document.createElement('button')
+    b.dataset.target = s.id
+    b.setAttribute('aria-label', s.label)
+    b.innerHTML = `<span class="n">${s.num || '00'}</span><span class="l">${s.label}</span>`
+    links.append(b)
+  })
+
+  // hero
+  const hero = P.hero
+  const ladder = (p) => [400, 800, 1200, 1600].filter((w) => w <= p.max)
+  const srcset = (p) => ladder(p).map((w) => `${P.photoSrc(p, w)} ${w}w`).join(', ')
+  const sharp = $('#hero-sharp'), soft = $('#hero-soft')
+  sharp.srcset = srcset(hero); sharp.sizes = '100vw'; sharp.src = P.photoSrc(hero, 1600)
+  soft.src = P.photoSrc(hero, 400) // blurred anyway — the smallest derivative is plenty
+  $('#portrait-img').src = P.profile
+  const STATS = [
+    { v: P.projects.length, k: 'Projects' },
+    { v: 4, k: 'Active now' },
+    { v: P.photos.length, k: 'Frames' },
+  ]
+  $('#stats').innerHTML = STATS.map((s) => `<div class="stat"><b data-v="${s.v}">${reduced ? s.v : 0}</b><span>${s.k}</span></div>`).join('')
+
+  // about
+  const [pre, quote] = P.statement.split('"')
+  $('#statement').innerHTML = `${pre}<span class="accent">"${quote}"</span>`
+  $('#bio').textContent = P.bio
+  $('#facts').innerHTML = P.facts.map((f) => `<div class="qcell"><div class="k">${f.k}</div><div class="v">${f.v}</div></div>`).join('')
+  $('#chips').innerHTML = P.techStack.map((t) => `<span class="chip">${t}</span>`).join('')
+
+  // work
+  $('#rows').innerHTML = P.projects.map((p, i) => `
+    <div class="row">
+      <button class="row-btn" aria-expanded="false" aria-controls="acc-${i}">
+        <span class="row-num"><span class="rec"></span>${pad2(i + 1)}</span>
+        <span><span class="row-title">${p.title}</span><span class="row-tag">${p.tagline}</span></span>
+        <span class="row-meta"><span class="row-year">${p.year}</span><span class="row-stack">${p.stack.map((s) => `<span>${s}</span>`).join('')}</span></span>
+        <span class="pm" aria-hidden="true"></span>
+      </button>
+      <div class="acc" id="acc-${i}"><div><div class="acc-body">
+        <p>${p.description}</p>
+        <ul>${p.highlights.map((h) => `<li>${h}</li>`).join('')}</ul>
+        ${p.previews.length ? `<div class="previews">${p.previews.map((src) => `<img src="${src}" alt="${p.title} preview" loading="lazy">`).join('')}</div>` : ''}
+      </div></div></div>
+    </div>`).join('')
+
+  // film strip
+  const rail = $('#rail')
+  rail.innerHTML = P.photos.map((p, i) => `
+    <button class="frame" style="--ar:${p.ar.toFixed(4)}" data-i="${i}" aria-label="Open photo ${i + 1}: ${p.place}">
+      <span class="edge" aria-hidden="true">▸ ${pad2(i + 1)}A${i % 3 === 0 ? `  ·  ${p.focal ? 'FUJI X-S20' : 'PHONE'}` : ''}</span>
+      <span class="frame-inner"><img srcset="${srcset(p)}" sizes="calc(48vh * ${p.ar.toFixed(3)})" src="${P.photoSrc(p, 800)}" alt="${p.place}" loading="lazy" decoding="async"><span class="shade"></span></span>
+    </button>`).join('')
+  $('#film-total').textContent = pad2(P.photos.length)
+
+  // travel + contact
+  $('#trips').innerHTML = P.trips.map((t, i) => `
+    <div class="trip rv" style="--i:${i}">
+      <span class="yr">${t.year}</span>
+      <img src="https://flagcdn.com/w80/${t.code}.png" alt="${t.country}" loading="lazy">
+      <h3>${t.country}</h3><div class="city">${t.city}</div><div class="type">${t.type}</div>
+    </div>`).join('')
+  $('#socials').innerHTML = P.socials.map((s) => {
+    const ext = s.href.startsWith('http')
+    return `<a href="${s.href}"${ext ? ' target="_blank" rel="noopener noreferrer"' : ''}>${s.label}</a>`
+  }).join('')
+
+  /* ================================================================== HUD */
+  const hudEls = {}
+  ;['shutter', 'ap', 'iso', 'focal', 'place', 'frame', 'shots'].forEach((k) => (hudEls[k] = $('#h-' + k)))
+  const hudVals = {}
+  function setHud(k, v) {
+    v = String(v)
+    if (hudVals[k] === v) return
+    const first = hudVals[k] === undefined
+    hudVals[k] = v
+    const el = hudEls[k]
+    el.textContent = v
+    if (first || reduced) return
+    // value flips up into place and flares accent — the readout visibly "ticks"
+    el.animate([{ transform: 'translateY(60%)', opacity: 0 }, { transform: 'none', opacity: 1 }], { duration: 180, easing: EASE_OUT_CSS })
+    el.classList.add('tick')
+    clearTimeout(el._t)
+    el._t = setTimeout(() => el.classList.remove('tick'), 60)
+  }
+  function showExif(p) {
+    setHud('ap', p.aperture ? p.aperture.replace('f/', 'F') : '—')
+    setHud('iso', p.iso ?? '—')
+    setHud('focal', p.focal ?? '—')
+    setHud('place', p.place.toUpperCase())
+  }
+  showExif(hero)
+  setHud('frame', `01 / ${pad2(SECTIONS.length)}`)
+  let shots = 0
+  setHud('shots', pad3(shots))
+
+  // exposure meter scale
+  $('#meter-scale').innerHTML = [-3, -2, -1, 0, 1, 2, 3]
+    .map((n) => `<span class="${n === 0 ? 'z' : ''}">${n > 0 ? '+' + n : n < 0 ? '−' + -n : '0'}</span>`)
+    .join('<i>·</i><i>·</i>')
+  const needle = $('#meter-needle')
+  const meter = { x: 0, v: 0, half: 110 }
+
+  // focus-ring ruler — distance scale is linear in 1/d like a real lens barrel
+  const RW = 900
+  const rulerTrack = $('#ruler-track')
+  const ticks = $('#ruler-ticks')
+  ticks.style.left = '-300px'; ticks.style.width = RW + 600 + 'px'
+  ;[0.3, 0.5, 0.7, 1, 2, 3, 5, Infinity].forEach((d) => {
+    const x = ((1 / 0.3 - 1 / d) / (1 / 0.3)) * RW
+    const el = document.createElement('div')
+    el.className = 'ruler-label'
+    el.style.left = x + 'px'
+    el.textContent = d === Infinity ? '∞' : d < 1 ? String(d).replace('0.', '.') : d + 'm'
+    rulerTrack.append(el)
+  })
+  let rulerW = 0
+
+  const SHUTTERS = ['1/125', '1/250', '1/500', '1/1000', '1/2000', '1/4000', '1/8000']
+
+  /* ================================================================== IRIS
+     7 blades, each a huge rect whose inner edge sits `r` from the centre.
+     Together their inner edges form a heptagon of inradius r; shrinking r
+     while twisting the group reads as a real aperture stopping down. Blades
+     are painted in order (i+1 over i); a clipped copy of blade 0 on top
+     closes the cycle so the last seam overlaps the same way as the others. */
+  const NB = 7
+  const NS = 'http://www.w3.org/2000/svg'
+  const iris = $('#iris'), irisSvg = $('#iris-svg'), irisRot = $('#iris-rot')
+  const blades = []
+  for (let i = 0; i < NB; i++) {
+    const r = document.createElementNS(NS, 'rect')
+    if (i === 0) r.id = 'blade-0'
+    r.setAttribute('fill', 'url(#blade-grad)')
+    r.setAttribute('stroke', 'rgba(212,168,83,.5)')
+    r.setAttribute('stroke-width', '1.2')
+    irisRot.append(r)
+    blades.push(r)
+  }
+  const seam = document.createElementNS(NS, 'g')
+  seam.setAttribute('clip-path', 'url(#iris-clip)')
+  const use = document.createElementNS(NS, 'use')
+  use.setAttribute('href', '#blade-0')
+  seam.append(use)
+  irisRot.append(seam)
+
+  const irisGeo = { rOpen: 1000 }
+  let irisT = 1
+  function sizeIris() {
+    const W = innerWidth, H = innerHeight, D = Math.hypot(W, H)
+    irisGeo.rOpen = D / 2 + 40
+    irisSvg.setAttribute('viewBox', `${-W / 2} ${-H / 2} ${W} ${H}`)
+    blades.forEach((b) => {
+      b.setAttribute('x', -2 * D); b.setAttribute('y', 0)
+      b.setAttribute('width', 4 * D); b.setAttribute('height', 2 * D)
+    })
+    // quadrant on blade 0's "previous blade" side (normal points +y, twist runs toward +x)
+    $('#iris-clip-poly').setAttribute('points', `0,0 0,${3 * D} ${3 * D},${3 * D} ${3 * D},0`)
+    setIris(irisT)
+  }
+  function setIris(t) {
+    irisT = t
+    const r = irisGeo.rOpen * (1 - t)
+    blades.forEach((b, i) => b.setAttribute('transform', `rotate(${(i * 360) / NB}) translate(0 ${r.toFixed(2)})`))
+    irisRot.setAttribute('transform', `rotate(${(t * 64).toFixed(2)})`)
+  }
+
+  const flashEl = $('#flash')
+  function fire() {
+    shots++
+    setHud('shots', pad3(shots))
+    if (reduced) return
+    flashEl.animate([{ opacity: 0 }, { opacity: 0.85, offset: 0.2 }, { opacity: 0 }], { duration: 90, easing: 'linear' })
+  }
+
+  let shooting = false, skipVel = false
+  function jumpTo(id) {
+    const el = document.getElementById(id)
+    if (!el) return
+    const y = el.getBoundingClientRect().top + scrollY
+    if (lenis) lenis.scrollTo(y, { immediate: true, force: true })
+    else window.scrollTo(0, y)
+    skipVel = true
+  }
+  async function shutterTo(id) {
+    if (shooting) return
+    shooting = true
+    if (reduced) {
+      const fader = $('#fader')
+      const a = fader.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 140, easing: 'ease', fill: 'forwards' })
+      await done(a)
+      jumpTo(id); fire()
+      const b = fader.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 200, easing: 'ease', fill: 'forwards' })
+      await done(b)
+      a.cancel(); b.cancel()
+      shooting = false
+      return
+    }
+    iris.classList.add('on')
+    await tween(380, easeInOut, (k) => setIris(k))
+    jumpTo(id)
+    fire()
+    await wait(70)
+    await tween(450, easeOut, (k) => setIris(1 - k))
+    iris.classList.remove('on')
+    shooting = false
+  }
+  $$('[data-target]').forEach((b) => b.addEventListener('click', () => shutterTo(b.dataset.target)))
+
+  /* ================================================================== HERO · RACK FOCUS */
+  const heroSec = $('#hero'), heroName = $('#hero-name'), heroCopy = $('#hero-copy')
+  const af = $('#af-pt'), afBox = $('.box', af), afLbl = $('#af-lbl')
+  const H = {
+    f: reduced ? 1 : 0, fT: reduced ? 1 : 0, lastF: -1,
+    ax: 0, ay: 0, tx: 0, ty: 0, // AF point: current + target, hero-relative px
+    nameX: 0, nameY: 0, bgX: 0, bgY: 0, w: 0, h: 0,
+    locked: false, lastMove: 0, lockX: 0, lockY: 0, active: false, pointerIn: false,
+  }
+  function measureHero() {
+    const hr = heroSec.getBoundingClientRect(), nr = heroName.getBoundingClientRect()
+    H.w = hr.width; H.h = hr.height
+    H.nameX = nr.left - hr.left + nr.width * 0.34
+    H.nameY = nr.top - hr.top + nr.height * 0.62
+    H.bgX = hr.width * 0.64; H.bgY = hr.height * 0.4
+    if (!H.pointerIn && H.active) { H.tx = H.nameX; H.ty = H.nameY }
+  }
+  function aim(x, y, near) {
+    H.tx = x; H.ty = y; H.fT = near ? 1 : 0
+    const moved = Math.hypot(x - H.lockX, y - H.lockY) > 5
+    if (H.locked && !moved) return
+    H.lastMove = performance.now()
+    if (H.locked) { H.locked = false; af.classList.remove('locked') }
+    af.classList.add('hunting')
+  }
+  const isNear = (target) => !!target.closest('.hero-copy > *, .portrait')
+  if (!reduced) {
+    heroSec.addEventListener('pointermove', (e) => {
+      if (!H.active || e.pointerType !== 'mouse') return
+      H.pointerIn = true
+      const r = heroSec.getBoundingClientRect()
+      aim(e.clientX - r.left, e.clientY - r.top, isNear(e.target))
+    })
+    heroSec.addEventListener('pointerdown', (e) => {
+      if (!H.active || e.pointerType === 'mouse') return
+      const r = heroSec.getBoundingClientRect()
+      aim(e.clientX - r.left, e.clientY - r.top, isNear(e.target))
+    })
+    heroSec.addEventListener('pointerleave', () => {
+      if (!H.active) return
+      H.pointerIn = false
+      aim(H.nameX, H.nameY, true)
+    })
+  }
+  function updateHero(now) {
+    if (reduced) return
+    // rack: lerp the depth, only touch styles when it actually moved
+    H.f += (H.fT - H.f) * 0.085
+    if (Math.abs(H.f - H.lastF) > 0.002) {
+      H.lastF = H.f
+      soft.style.opacity = H.f.toFixed(3)
+      const b = (1 - H.f) * 7
+      heroName.style.filter = b < 0.05 ? 'none' : `blur(${b.toFixed(2)}px)`
+    }
+    // AF point chases its target, then locks once both it and focus settle
+    H.ax += (H.tx - H.ax) * 0.2
+    H.ay += (H.ty - H.ay) * 0.2
+    af.style.transform = `translate3d(${H.ax.toFixed(1)}px,${H.ay.toFixed(1)}px,0)`
+    const settled = Math.abs(H.f - H.fT) < 0.03 && Math.hypot(H.tx - H.ax, H.ty - H.ay) < 1.5
+    if (!H.locked && settled && now - H.lastMove > 180) {
+      H.locked = true; H.lockX = H.tx; H.lockY = H.ty
+      af.classList.remove('hunting'); af.classList.add('locked')
+      afLbl.textContent = H.fT > 0.5 ? 'AF-S ● 1.2m' : 'AF-S ● ∞'
+      afBox.animate([{ transform: 'scale(1.18)' }, { transform: 'scale(1)' }], { duration: 200, easing: EASE_OUT_CSS })
+    }
+  }
+
+  // role: words rack in and out of focus
+  const roleEl = $('#role')
+  let roleI = 0
+  setInterval(async () => {
+    roleI = (roleI + 1) % P.roles.length
+    if (reduced) {
+      await done(roleEl.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 150, fill: 'forwards' }))
+      roleEl.textContent = P.roles[roleI]
+      roleEl.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 200, fill: 'forwards' })
+      return
+    }
+    await done(roleEl.animate([{ filter: 'blur(0px)', opacity: 1 }, { filter: 'blur(8px)', opacity: 0 }], { duration: 220, easing: 'ease', fill: 'forwards' }))
+    roleEl.textContent = P.roles[roleI]
+    roleEl.animate([{ filter: 'blur(8px)', opacity: 0 }, { filter: 'blur(0px)', opacity: 1 }], { duration: 320, easing: EASE_OUT_CSS, fill: 'forwards' })
+  }, 2600)
+
+  function countUp() {
+    $$('#stats b').forEach((b) => {
+      const v = +b.dataset.v
+      if (reduced) { b.textContent = v; return }
+      tween(1100, easeOut, (k) => (b.textContent = Math.round(v * k)))
+    })
+  }
+
+  /* ================================================================== FILM STRIP */
+  const filmSec = $('#photography'), filmSticky = $('#film-sticky'), scroller = $('#film-scroller')
+  const frames = $$('.frame', rail)
+  const inners = frames.map((f) => $('.frame-inner', f))
+  const shades = frames.map((f) => $('.shade', f))
+  const F = { centers: [], railW: 0, top: 0, h: 0, focused: -1, lastK: frames.map(() => -1) }
+  function measureFilm() {
+    const vw = innerWidth, vh = innerHeight
+    if (reduced) {
+      rail.style.paddingLeft = rail.style.paddingRight = '20px'
+    } else {
+      filmSticky.style.height = vh + 'px'
+      rail.style.paddingLeft = vw / 2 - frames[0].offsetWidth / 2 + 'px'
+      rail.style.paddingRight = vw / 2 - frames[frames.length - 1].offsetWidth / 2 + 'px'
+      F.railW = rail.offsetWidth
+      filmSec.style.height = Math.max(vh, F.railW - vw + vh) + 'px'
+    }
+    F.centers = frames.map((f) => f.offsetLeft + f.offsetWidth / 2)
+    F.top = filmSec.getBoundingClientRect().top + scrollY
+    F.h = filmSec.offsetHeight
+  }
+  function focusFrame(i, active) {
+    if (i === F.focused) return
+    F.focused = i
+    const p = P.photos[i]
+    $('#film-count').textContent = pad2(i + 1)
+    $('#film-place').textContent = p.place.toUpperCase()
+    if (active) showExif(p)
+  }
+  function updateFilm(y, activeIsFilm) {
+    if (reduced) return
+    const vw = innerWidth, vh = innerHeight
+    if (y + vh < F.top - 200 || y > F.top + F.h + 200) return
+    const prog = clamp((y - F.top) / (F.h - vh))
+    const x = -prog * (F.railW - vw)
+    rail.style.transform = `translate3d(${x.toFixed(1)}px,0,0)`
+    $('#film-bar').style.transform = `scaleX(${prog.toFixed(4)})`
+    let best = 0, bestD = Infinity
+    for (let i = 0; i < frames.length; i++) {
+      const dx = F.centers[i] + x - vw / 2
+      const ad = Math.abs(dx)
+      if (ad < bestD) { bestD = ad; best = i }
+      const k = 1 - clamp(ad / (vw * 0.55))
+      const e = k * k * (3 - 2 * k)
+      const q = Math.round(e * 400) / 400
+      if (q === F.lastK[i]) continue // offscreen / unchanged frames cost nothing
+      F.lastK[i] = q
+      inners[i].style.transform = `scale(${(0.88 + 0.12 * q).toFixed(4)})`
+      shades[i].style.opacity = (0.6 * (1 - q)).toFixed(3)
+    }
+    focusFrame(best, activeIsFilm)
+  }
+  if (reduced) {
+    scroller.addEventListener('scroll', () => {
+      const mid = innerWidth / 2
+      let best = 0, bestD = Infinity
+      frames.forEach((f, i) => { const r = f.getBoundingClientRect(); const d = Math.abs(r.left + r.width / 2 - mid); if (d < bestD) { bestD = d; best = i } })
+      focusFrame(best, activeIdx === 3)
+    }, { passive: true })
+  }
+
+  /* ================================================================== LIGHTBOX */
+  const lb = $('#lb'), lbImg = $('#lb-img'), lbCap = $('#lb-cap'), lbFig = $('#lb-fig')
+  let lbIndex = -1, lbReturn = null
+  function lbRender(i) {
+    const p = P.photos[i]
+    lbImg.src = P.photoSrc(p, 1600)
+    lbImg.alt = p.place
+    const exif = [p.focal, p.aperture, p.iso ? 'ISO ' + p.iso : null].filter(Boolean).join(' · ') || 'NO EXIF'
+    lbCap.innerHTML = `FRAME <b>${pad2(i + 1)}</b> / ${pad2(P.photos.length)} &nbsp; ${p.place.toUpperCase()} &nbsp; ${exif}`
+  }
+  function lbOpen(i) {
+    lbReturn = document.activeElement
+    lbIndex = i
+    lbRender(i)
+    lb.hidden = false
+    lockScroll(true)
+    lb.focus()
+    lb.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 200, easing: 'ease' })
+    if (!reduced) lbFig.animate([{ transform: 'scale(.96)', opacity: 0 }, { transform: 'none', opacity: 1 }], { duration: 260, easing: EASE_OUT_CSS })
+  }
+  async function lbClose() {
+    if (lbIndex < 0) return
+    lbIndex = -1
+    const out = lb.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 160, easing: 'ease', fill: 'forwards' })
+    await done(out)
+    lb.hidden = true
+    out.cancel()
+    lockScroll(false)
+    lbReturn?.focus({ preventScroll: true })
+  }
+  function lbStep(d) {
+    lbIndex = (lbIndex + d + P.photos.length) % P.photos.length
+    lbRender(lbIndex)
+    lbImg.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 180, easing: 'ease' })
+  }
+  $('#lb-close').addEventListener('click', lbClose)
+  $('#lb-prev').addEventListener('click', () => lbStep(-1))
+  $('#lb-next').addEventListener('click', () => lbStep(1))
+  lb.addEventListener('click', (e) => { if (e.target === lb) lbClose() })
+  addEventListener('keydown', (e) => {
+    if (lbIndex < 0) return
+    if (e.key === 'Escape') lbClose()
+    else if (e.key === 'ArrowLeft') lbStep(-1)
+    else if (e.key === 'ArrowRight') lbStep(1)
+    else if (e.key === 'Tab') {
+      const f = $$('.lb-btn', lb), first = f[0], last = f[f.length - 1]
+      if (e.shiftKey && (document.activeElement === first || document.activeElement === lb)) { e.preventDefault(); last.focus() }
+      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus() }
+    }
+  })
+  frames.forEach((f, i) => f.addEventListener('click', async () => { fire(); await wait(reduced ? 0 : 70); lbOpen(i) }))
+  $('#shutter-btn').addEventListener('click', fire)
+
+  /* ================================================================== WORK ACCORDION */
+  const rows = $$('.row')
+  rows.forEach((row) => {
+    $('.row-btn', row).addEventListener('click', () => {
+      const open = !row.classList.contains('open')
+      rows.forEach((r) => { r.classList.remove('open'); $('.row-btn', r).setAttribute('aria-expanded', 'false') })
+      if (open) { row.classList.add('open'); $('.row-btn', row).setAttribute('aria-expanded', 'true') }
+    })
+  })
+
+  /* ================================================================== REVEALS + HEADING AF LOCK */
+  const revealIO = new IntersectionObserver((es) => es.forEach((e) => {
+    if (e.isIntersecting) { e.target.classList.add('in'); revealIO.unobserve(e.target) }
+  }), { rootMargin: '0px 0px -10% 0px' })
+  $$('.rv').forEach((el) => revealIO.observe(el))
+  $('#film-sh').classList.add('in')
+  const lockIO = new IntersectionObserver((es) => es.forEach((e) => e.target.classList.toggle('locked', e.isIntersecting)),
+    { rootMargin: '-40% 0px -40% 0px' })
+  $$('.sh').forEach((el) => el.id !== 'film-sh' && lockIO.observe(el))
+
+  /* ================================================================== MEASURE */
+  let secTops = []
+  function measure() {
+    measureFilm()
+    secTops = SECTIONS.map((s) => document.getElementById(s.id).getBoundingClientRect().top + scrollY)
+    F.top = secTops[3]
+    measureHero()
+    rulerW = $('#ruler').offsetWidth
+    meter.half = $('#meter').offsetWidth / 2 - 4
+    sizeIris()
+  }
+  let measureQueued = false
+  const queueMeasure = () => { if (measureQueued) return; measureQueued = true; requestAnimationFrame(() => { measureQueued = false; measure() }) }
+  new ResizeObserver(queueMeasure).observe($('#main'))
+  addEventListener('resize', queueMeasure)
+
+  /* ================================================================== LOOP */
+  const nav = $('#nav')
+  const navBtns = $$('#links button')
+  let lastY = scrollY, vel = 0, activeIdx = -1
+  function setActive(i) {
+    if (i === activeIdx) return
+    activeIdx = i
+    setHud('frame', `${pad2(i + 1)} / ${pad2(SECTIONS.length)}`)
+    navBtns.forEach((b, j) => b.setAttribute('aria-current', j === i ? 'true' : 'false'))
+    $('#film-sh').classList.toggle('locked', i === 3)
+    if (i === 3 && F.focused >= 0) showExif(P.photos[F.focused])
+    else if (i !== 3) showExif(hero)
+  }
+  function loop(now) {
+    lenis?.raf(now)
+    const y = scrollY, vh = innerHeight
+    if (skipVel) { lastY = y; vel = 0; skipVel = false }
+    const dy = y - lastY
+    lastY = y
+    vel += (dy - vel) * 0.2
+
+    nav.classList.toggle('scrolled', y > 30)
+
+    let idx = 0
+    for (let i = 0; i < secTops.length; i++) if (secTops[i] <= y + vh * 0.45) idx = i
+    setActive(idx)
+
+    if (!reduced) {
+      // focus ring slides with page progress: near → ∞ as you go deeper
+      const docH = document.documentElement.scrollHeight - vh
+      const p = docH > 0 ? clamp(y / docH) : 0
+      rulerTrack.style.transform = `translate3d(${(rulerW / 2 - p * RW).toFixed(1)}px,0,0)`
+
+      // exposure needle: velocity-driven, damped spring back to 0
+      const target = clamp(vel / 14, -3, 3)
+      meter.v += (target - meter.x) * 0.12
+      meter.v *= 0.78
+      meter.x += meter.v
+      needle.style.transform = `translate3d(${((meter.x / 3) * meter.half).toFixed(1)}px,0,0)`
+
+      // shutter priority: faster scroll → faster shutter
+      setHud('shutter', SHUTTERS[Math.min(SHUTTERS.length - 1, 1 + Math.floor(Math.abs(vel) / 10))])
+
+      if (y < vh * 1.1) updateHero(now)
+      updateFilm(y, idx === 3)
+    }
+    requestAnimationFrame(loop)
+  }
+
+  /* ================================================================== BOOT
+     Iris starts closed; open once the hero frame and fonts are ready. */
+  measure()
+  setIris(1)
+  if (!reduced) {
+    H.ax = H.tx = H.bgX; H.ay = H.ty = H.bgY
+    af.style.transform = `translate3d(${H.ax}px,${H.ay}px,0)`
+  } else {
+    af.classList.remove('hunting'); af.classList.add('locked')
+  }
+  requestAnimationFrame(loop)
+
+  const ready = Promise.race([
+    Promise.all([sharp.decode().catch(() => {}), document.fonts.ready]),
+    wait(1800),
+  ])
+  ready.then(async () => {
+    measure()
+    if (reduced) {
+      iris.classList.remove('on')
+      H.active = false
+      H.ax = H.nameX; H.ay = H.nameY
+      af.style.transform = `translate3d(${H.ax}px,${H.ay}px,0)`
+      countUp()
+      return
+    }
+    await wait(250)
+    $('#iris-lbl').animate([{ opacity: 1 }, { opacity: 0 }], { duration: 160, fill: 'forwards' })
+    fire()
+    await tween(900, easeOut, (k) => setIris(1 - k))
+    iris.classList.remove('on')
+    countUp()
+    // opening shot: background is sharp, then focus racks onto the name
+    await wait(550)
+    H.active = true
+    if (!H.pointerIn) aim(H.nameX, H.nameY, true)
+  })
+})()
+</script>
+</body>
+</html>

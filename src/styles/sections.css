@@ -1,0 +1,17 @@
+/* Section styles beyond the prototype's motion.css — things the prototype
+   left out that the real site needs (project screenshots and links). */
+
+/* Project screenshots as small prints on the table */
+.row-prints{display:flex;gap:14px;flex-wrap:wrap;margin:6px 0 24px}
+.row-prints img{width:180px;height:112px;object-fit:cover;border-radius:3px;border:5px solid var(--paper);border-bottom-width:16px;box-shadow:0 16px 36px rgba(0,0,0,.5);transform:rotate(var(--r,0deg))}
+
+/* Project links: Live is the primary action, the rest are outlines */
+.row-links{display:flex;gap:10px;flex-wrap:wrap}
+.row-link{display:inline-flex;align-items:center;gap:6px;padding:10px 16px;border-radius:999px;border:1px solid var(--bd);font:500 13px/1 var(--head);color:var(--ts);transition:color .2s ease,border-color .2s ease,background-color .2s ease,transform 140ms var(--ease-out)}
+.row-link.primary{background:var(--accent);border-color:var(--accent);color:#111}
+.row-link:active{transform:scale(.97)}
+@media (hover:hover) and (pointer:fine){
+  .row-link:not(.primary):hover{color:var(--accent);border-color:var(--accent)}
+  .row-link.primary:hover{background:var(--accent-h);border-color:var(--accent-h)}
+}
+@media (prefers-reduced-motion: reduce){.row-link{transition-duration:.01ms}}

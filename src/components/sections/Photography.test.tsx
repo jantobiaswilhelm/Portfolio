@@ -78,42 +78,44 @@ describe('Photography grid', () => {
     expect(img.getAttribute('sizes')).not.toMatch(/^\d{4,}px$/)
   })
 
-  it('lays photos into justified rows once the container is measured', () => {
-    const callbacks: ResizeObserverCallback[] = []
-    const original = global.ResizeObserver
-    // Structurally satisfies the DOM ResizeObserver type, same as the setup.ts mock.
-    global.ResizeObserver = class {
-      constructor(cb: ResizeObserverCallback) {
-        callbacks.push(cb)
-      }
-      observe() {}
-      unobserve() {}
-      disconnect() {}
-    }
+  it('sizes every image for the column it sits in', () => {
+    render(<Photography items={fixture} />)
+    const img = screen.getByAltText('Canal at dusk') as HTMLImageElement
+    expect(img.getAttribute('sizes')).toBe('(max-width: 600px) 50vw, (max-width: 1000px) 33vw, (max-width: 1400px) 25vw, 300px')
+  })
 
+  it('lays photos into columns for the viewport width, each photo exactly once', () => {
+    const { container } = render(<Photography items={fixture} />)
+    // jsdom's default viewport is 1024px wide → 4 columns
+    expect(container.querySelectorAll('.col')).toHaveLength(4)
+    const inColumns = container.querySelectorAll('.col .tile')
+    expect(inColumns).toHaveLength(fixture.length)
+  })
+
+  it('re-lays the columns when the viewport narrows to a phone', () => {
+    const original = window.innerWidth
     try {
       const { container } = render(<Photography items={fixture} />)
       act(() => {
-        callbacks[0](
-          [{ contentRect: { width: 1200 } }] as unknown as ResizeObserverEntry[],
-          {} as ResizeObserver,
-        )
+        Object.defineProperty(window, 'innerWidth', { configurable: true, value: 390 })
+        window.dispatchEvent(new Event('resize'))
       })
-
-      const tiles = screen.getAllByRole('button')
-      expect(tiles).toHaveLength(fixture.length)
-
-      const firstWidth = Number.parseFloat((tiles[0] as HTMLElement).style.width)
-      expect(firstWidth).toBeGreaterThan(0)
-      expect(firstWidth).toBeLessThan(1200)
-
-      // Row tiles get a pixel-based sizes attribute matching their computed width.
-      const img = screen.getByAltText('Canal at dusk') as HTMLImageElement
-      expect(img.getAttribute('sizes')).toBe(`${Math.round(firstWidth)}px`)
-
-      expect(container.querySelectorAll('.flex').length).toBeGreaterThan(0)
+      expect(container.querySelectorAll('.col')).toHaveLength(2)
+      expect(screen.getAllByRole('button')).toHaveLength(fixture.length)
     } finally {
-      global.ResizeObserver = original
+      Object.defineProperty(window, 'innerWidth', { configurable: true, value: original })
     }
+  })
+
+  it('tells the viewfinder cursor each frame’s exposure', () => {
+    render(<Photography items={fixture} />)
+    const tile = screen.getAllByRole('button')[0]
+    expect(tile).toHaveAttribute('data-cursor', 'photo')
+    expect(tile).toHaveAttribute('data-exif', '23mm · f/2.8 · ISO 200')
+  })
+
+  it('counts the frames in the section subtitle', () => {
+    render(<Photography items={fixture} />)
+    expect(screen.getByText(/^3 frames/)).toBeInTheDocument()
   })
 })

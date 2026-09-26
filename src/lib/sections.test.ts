@@ -11,6 +11,9 @@ describe('sections registry', () => {
     expect(numbered.map((s) => s.num)).toEqual(['01', '02', '03', '04', '05'])
   })
   it('exposes ids in order', () => {
-    expect(SECTION_IDS).toEqual(['hero', 'about', 'work', 'photography', 'travel', 'contact'])
+    expect(SECTION_IDS).toEqual(['hero', 'about', 'projects', 'experience', 'photography', 'contact'])
+  })
+  it('calls the work section Projects', () => {
+    expect(SECTIONS.find((s) => s.id === 'projects')?.label).toBe('Projects')
   })
 })

@@ -1,4 +1,4 @@
-export type SectionId = 'hero' | 'about' | 'work' | 'photography' | 'travel' | 'contact'
+export type SectionId = 'hero' | 'about' | 'projects' | 'experience' | 'photography' | 'contact'
 
 export interface SectionDef {
   id: SectionId
@@ -9,9 +9,9 @@ export interface SectionDef {
 export const SECTIONS: SectionDef[] = [
   { id: 'hero', label: 'Home' },
   { id: 'about', label: 'About', num: '01' },
-  { id: 'work', label: 'Work', num: '02' },
-  { id: 'photography', label: 'Photography', num: '03' },
-  { id: 'travel', label: 'Travel', num: '04' },
+  { id: 'projects', label: 'Projects', num: '02' },
+  { id: 'experience', label: 'Experience', num: '03' },
+  { id: 'photography', label: 'Photography', num: '04' },
   { id: 'contact', label: 'Contact', num: '05' },
 ]
 
