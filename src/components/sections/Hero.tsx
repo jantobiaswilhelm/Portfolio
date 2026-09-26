@@ -300,8 +300,12 @@ export function Hero() {
     if (line2Ref.current) line2Ref.current.style.transform = `translate3d(${e * 16}vw,0,0)`
     const fade = 1 - clamp(p * 6)
     const op = fade === 1 ? '' : String(fade) // leave the CSS intro fade alone at rest
-    if (cue) cue.style.opacity = op
+    // Their CSS fade-in carries a ~2.5s delay for the intro; a scroll-driven fade
+    // must follow the scroll directly, not start seconds later.
+    const tr = fade === 1 ? '' : 'none'
+    if (cue) { cue.style.transition = tr; cue.style.opacity = op }
     if (hint) {
+      hint.style.transition = tr
       hint.style.opacity = op
       hint.style.pointerEvents = fade < 0.5 ? 'none' : '' // no clicking an invisible sound button
     }
