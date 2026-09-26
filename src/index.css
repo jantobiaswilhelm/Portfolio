@@ -1,4 +1,7 @@
 @import "tailwindcss";
+/* The motion design system (ported from prototypes/proto-6-mix.html). In the
+   components layer: it overrides Tailwind's preflight, utilities still win. */
+@import "./styles/motion.css" layer(components);
 
 @theme {
   --color-bg: #08080a;
@@ -18,34 +21,7 @@
   --font-head: 'Space Grotesk', 'DM Sans', system-ui, sans-serif;
 }
 
-body {
-  background-color: var(--color-bg);
-  color: var(--color-tp);
-  font-family: var(--font-sans);
-  line-height: 1.65;
-  -webkit-font-smoothing: antialiased;
-  overflow-x: hidden;
-}
-h1, h2, h3, h4 {
-  font-family: var(--font-head);
-  line-height: 1.05;
-  letter-spacing: -0.02em;
-}
-
-@keyframes marquee { to { transform: translateX(-50%); } }
-@keyframes sweep { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
-@keyframes hue { 0% { filter: hue-rotate(0deg); } 100% { filter: hue-rotate(18deg); } }
-
 ::-webkit-scrollbar { width: 8px; }
 ::-webkit-scrollbar-track { background: var(--color-bg); }
 ::-webkit-scrollbar-thumb { background: var(--color-border); border-radius: 4px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--color-tm); }
-
-@media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
-    animation-duration: 0.001ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.001ms !important;
-    scroll-behavior: auto !important;
-  }
-}

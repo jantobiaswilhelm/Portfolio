@@ -1,0 +1,5 @@
+/* Hero additions on top of motion.css. */
+
+/* Jan cropped this portrait himself — keep his crop instead of motion.css's 4:5 */
+.hero-portrait .pframe img{aspect-ratio:3550/4129}
+.hero-portrait picture,.hero-layer picture{display:contents}

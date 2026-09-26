@@ -83,6 +83,24 @@ describe('Lightbox', () => {
     expect(img.getAttribute('src')).toContain('-1600.jpg')
   })
 
+  it('shows the exposure (focal length, aperture, ISO)', () => {
+    render(<Lightbox photos={photos} index={0} onClose={() => {}} onChange={() => {}} />)
+    expect(screen.getByText('23mm · f/2.8 · ISO 200')).toBeInTheDocument()
+  })
+
+  it('hides the tile it opened from while open, and restores it on close', () => {
+    const tile = document.createElement('button')
+    const tileImg = document.createElement('img')
+    tile.append(tileImg)
+    document.body.append(tile)
+    const originFor = () => tile
+    const { rerender } = render(<Lightbox photos={photos} index={0} onClose={() => {}} onChange={() => {}} originFor={originFor} />)
+    expect(tileImg.style.visibility).toBe('hidden')
+    rerender(<Lightbox photos={photos} index={null} onClose={() => {}} onChange={() => {}} originFor={originFor} />)
+    expect(tileImg.style.visibility).toBe('')
+    tile.remove()
+  })
+
   it('falls back to the largest width a narrow photo actually has', () => {
     const narrow: Photo = { ...photo('n', 'N'), w: 1440, h: 960, widths: [400, 800, 1200] }
     render(<Lightbox photos={[narrow]} index={0} onClose={() => {}} onChange={() => {}} />)

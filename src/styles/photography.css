@@ -1,0 +1,9 @@
+/* Photography + lightbox additions to motion.css for the React port. */
+
+/* the <picture> wrapper must fill the tile so the image can cover it */
+.tile picture{display:block;width:100%;height:100%}
+/* the tile's paper + latent-image background (set inline) should cover */
+.tile{background-size:cover;background-position:center}
+/* while the full-size frame loads, the lightbox shows the tile image behind it */
+.lb-img{background-size:cover;background-position:center}
+.lb-bg{cursor:pointer}

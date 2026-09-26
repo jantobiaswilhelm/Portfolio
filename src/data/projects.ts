@@ -15,11 +15,14 @@ export interface Project {
   highlights: string[]
   featured: boolean
   previews: Preview[]
+  /** Hue for the generated preview card when there are no screenshots. */
+  hue: number
 }
 
 export const projects: Project[] = [
   {
     title: 'CX Lab Workspace',
+    hue: 210,
     tagline: 'IBM Agentic AI Challenge × FHNW × Roche',
     year: '2026',
     current: true,
@@ -38,6 +41,7 @@ export const projects: Project[] = [
   },
   {
     title: 'Lutem',
+    hue: 265,
     tagline: '"Headspace meets Steam"',
     year: '2025',
     current: true,
@@ -56,6 +60,7 @@ export const projects: Project[] = [
   },
   {
     title: 'NetflixRating',
+    hue: 0,
     tagline: 'Chrome extension for smarter browsing',
     year: '2026',
     current: true,
@@ -68,6 +73,7 @@ export const projects: Project[] = [
   },
   {
     title: 'MovieNight',
+    hue: 235,
     tagline: 'Discord bot + web app for movie nights',
     year: '2025',
     current: true,
@@ -79,6 +85,7 @@ export const projects: Project[] = [
   },
   {
     title: 'SQL Scrolls Public Release',
+    hue: 35,
     tagline: 'Bachelor Thesis — Gamified SQL learning',
     year: '2023',
     current: false,
@@ -96,6 +103,7 @@ export const projects: Project[] = [
   },
   {
     title: 'Business Process Digitalization Guide',
+    hue: 150,
     tagline: 'Process optimization consulting',
     year: '2022',
     current: false,
