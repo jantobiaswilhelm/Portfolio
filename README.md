@@ -11,7 +11,7 @@ I'm Jan, a Master's student at FHNW and Support Hero at twio.tech based in Basel
 ## Sections
 
 - **About** — who I am, what I build with
-- **Projects** — CX Lab Workspace, Lutem, NetflixRating, MovieNight, SQL Scrolls, Business Process Digitalization Guide
+- **Projects** — CX Lab Workspace, Lutem, NetflixRating, Garderobe, MovieNight, SQL Scrolls, Business Process Digitalization Guide
 - **Experience** — what I'm doing right now, plus the whole CV as a scroll-driven timeline
 - **Photography** — frames from my Fujifilm, with their EXIF
 - **Contact**

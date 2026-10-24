@@ -1,19 +1,7 @@
 import { useCallback, useEffect, useLayoutEffect, useRef } from 'react'
-import { largestWidth, photoUrl, type Photo } from '../../data/photos-manifest'
 import { useSmoothScroll } from '../../lib/smooth-scroll'
+import type { Slide } from '../../lib/slides'
 import { EASE_MOVE, EASE_OUT, RM, animate, pad2, settled } from '../../motion/env'
-
-export type Frame = Photo
-
-function metaLine(photo: Photo): string {
-  const where = [photo.place, photo.year].filter(Boolean).join(', ')
-  const gear = [photo.camera, photo.lens].filter(Boolean).join(' · ')
-  return [where, gear].filter(Boolean).join('  ·  ')
-}
-
-function exifLine(photo: Photo): string {
-  return [photo.focalLength, photo.aperture, photo.iso && `ISO ${photo.iso}`].filter(Boolean).join(' · ')
-}
 
 interface Rect { left: number; top: number; width: number; height: number }
 
@@ -32,26 +20,32 @@ const flipFrom = (from: Rect, to: Rect) =>
 const imgOf = (el: HTMLElement) => el.querySelector('img') ?? el
 
 /**
- * Fullscreen photo viewer. Opens as a shared-element zoom out of the tile you
+ * Fullscreen image viewer. Opens as a shared-element zoom out of the tile you
  * clicked (`originFor`), steps with a short directional swap, and closes by
  * flying back to whichever tile you ended on. Without an origin, without WAAPI
  * or under reduced motion it simply appears and disappears.
  */
 export function Lightbox({
-  photos,
+  slides,
   index,
   onClose,
   onChange,
   originFor,
+  noun = 'photo',
+  counter = 'Frame',
 }: {
-  photos: Photo[]
+  slides: Slide[]
   index: number | null
   onClose: () => void
   onChange: (next: number) => void
   /** The tile this frame opened from / closes back to (for the zoom). */
   originFor?: (i: number) => HTMLElement | null
+  /** What one slide is called in the controls' labels. */
+  noun?: string
+  /** Label in front of the "01 / 03" counter. */
+  counter?: string
 }) {
-  const wrap = (i: number) => (i + photos.length) % photos.length
+  const wrap = (i: number) => (i + slides.length) % slides.length
   const dialogRef = useRef<HTMLDivElement>(null)
   const bgRef = useRef<HTMLDivElement>(null)
   const imgRef = useRef<HTMLImageElement>(null)
@@ -89,13 +83,14 @@ export function Lightbox({
     if (index === null) return
     const img = imgRef.current, dialog = dialogRef.current
     if (!img || !dialog) return
-    const frame = photos[index]
+    const frame = slides[index]
     const to = fitRect(frame.w / frame.h)
     Object.assign(img.style, { left: `${to.left}px`, top: `${to.top}px`, width: `${to.width}px`, height: `${to.height}px` })
     const origin = originFor?.(index) ?? null
     // show the already-loaded tile image until the big one arrives, so nothing flashes blank
     const tileSrc = origin ? (imgOf(origin) as HTMLImageElement).currentSrc : ''
-    img.style.backgroundImage = tileSrc ? `url("${tileSrc}")` : `url("${frame.lqip}")`
+    const under = tileSrc || frame.placeholder
+    img.style.backgroundImage = under ? `url("${under}")` : ''
     const prev = shown.current
     shown.current = index
     hideOrigin(index)
@@ -119,7 +114,7 @@ export function Lightbox({
       animate(img, [{ opacity: 0, transform: `translate3d(${dir * 36}px,0,0)` }, { opacity: 1, transform: 'none' }], { duration: 240, easing: EASE_OUT })
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [index, photos])
+  }, [index, slides])
 
   const requestClose = useCallback(() => {
     if (index === null || closing.current) return
@@ -163,9 +158,9 @@ export function Lightbox({
   }, [index, requestClose, onChange])
 
   if (index === null) return null
-  const frame = photos[index]
-  const big = largestWidth(frame)
-  const exif = exifLine(frame)
+  const frame = slides[index]
+  const Noun = noun[0].toUpperCase() + noun.slice(1)
+  const many = slides.length > 1
 
   return (
     <div
@@ -173,23 +168,21 @@ export function Lightbox({
       className="lb"
       role="dialog"
       aria-modal="true"
-      aria-label={`Photo ${index + 1} of ${photos.length}`}
+      aria-label={`${Noun} ${index + 1} of ${slides.length}`}
       tabIndex={-1}
     >
       <div className="lb-bg" ref={bgRef} onClick={requestClose} />
       <picture>
-        <source srcSet={photoUrl(frame.id, big, 'avif')} type="image/avif" />
-        <source srcSet={photoUrl(frame.id, big, 'webp')} type="image/webp" />
-        <img ref={imgRef} className="lb-img" src={photoUrl(frame.id, big, 'jpg')} alt={frame.alt} />
+        {frame.sources?.map((s) => <source key={s.type} srcSet={s.srcSet} type={s.type} />)}
+        <img ref={imgRef} className="lb-img" src={frame.src} alt={frame.alt} />
       </picture>
       <div className="lb-ui">
         <button ref={closeRef} className="lb-close" aria-label="Close" onClick={requestClose}>Close ✕</button>
-        <button className="lb-nav lb-prev" aria-label="Previous photo" onClick={() => onChange(wrap(index - 1))}>‹</button>
-        <button className="lb-nav lb-next" aria-label="Next photo" onClick={() => onChange(wrap(index + 1))}>›</button>
+        {many && <button className="lb-nav lb-prev" aria-label={`Previous ${noun}`} onClick={() => onChange(wrap(index - 1))}>‹</button>}
+        {many && <button className="lb-nav lb-next" aria-label={`Next ${noun}`} onClick={() => onChange(wrap(index + 1))}>›</button>}
         <div className="lb-cap">
-          <span>Frame <b className="lb-n">{pad2(index + 1)}</b> / {pad2(photos.length)}</span>
-          <span className="meta">{metaLine(frame)}</span>
-          {exif && <span className="meta">{exif}</span>}
+          <span>{counter} <b className="lb-n">{pad2(index + 1)}</b> / {pad2(slides.length)}</span>
+          {frame.lines.map((l) => <span key={l} className="meta">{l}</span>)}
         </div>
       </div>
     </div>

@@ -34,20 +34,22 @@ describe('Projects accordion', () => {
     expect(rows[1]).toHaveAttribute('aria-expanded', 'true')
   })
 
-  it('shows a project\'s links once its row is open, opening in a new tab', async () => {
+  it.each([
+    ['Live', (p: (typeof projects)[number]) => p.live],
+    ['GitHub', (p: (typeof projects)[number]) => p.github],
+  ])('shows a project\'s %s link once its row is open, opening in a new tab', async (label, href) => {
     const user = userEvent.setup()
     render(<Projects />)
-    const i = projects.findIndex((p) => p.live && p.github)
+    const i = projects.findIndex((p) => href(p))
     expect(i).toBeGreaterThanOrEqual(0)
-    expect(screen.queryByRole('link', { name: /Live/ })).toBeNull()
+    expect(screen.queryByRole('link', { name: `${label} ↗` })).toBeNull()
 
     await user.click(screen.getAllByRole('button')[i])
     const body = screen.getByRole('region', { name: projects[i].title })
-    const live = within(body).getByRole('link', { name: 'Live ↗' })
-    expect(live).toHaveAttribute('href', projects[i].live)
-    expect(live).toHaveAttribute('target', '_blank')
-    expect(live).toHaveAttribute('rel', 'noopener noreferrer')
-    expect(within(body).getByRole('link', { name: 'GitHub ↗' })).toHaveAttribute('href', projects[i].github)
+    const link = within(body).getByRole('link', { name: `${label} ↗` })
+    expect(link).toHaveAttribute('href', href(projects[i]))
+    expect(link).toHaveAttribute('target', '_blank')
+    expect(link).toHaveAttribute('rel', 'noopener noreferrer')
   })
 
   it('shows screenshots with their captions as alt text', async () => {
@@ -56,5 +58,22 @@ describe('Projects accordion', () => {
     const i = projects.findIndex((p) => p.previews.length > 0)
     await user.click(screen.getAllByRole('button')[i])
     expect(screen.getByAltText(projects[i].previews[0].caption)).toBeInTheDocument()
+  })
+
+  it('enlarges a screenshot in the lightbox and steps through the project\'s shots', async () => {
+    const user = userEvent.setup()
+    render(<Projects />)
+    const i = projects.findIndex((p) => p.previews.length > 1)
+    const [first, second] = projects[i].previews
+    await user.click(screen.getAllByRole('button')[i])
+    await user.click(screen.getByRole('button', { name: `Enlarge screenshot: ${first.caption}` }))
+
+    const dialog = screen.getByRole('dialog', { name: `Screenshot 1 of ${projects[i].previews.length}` })
+    expect(within(dialog).getByAltText(first.caption).getAttribute('src')).toContain(first.full ?? first.src)
+    await user.click(within(dialog).getByLabelText('Next screenshot'))
+    expect(within(screen.getByRole('dialog')).getByAltText(second.caption)).toBeInTheDocument()
+
+    await user.keyboard('{Escape}')
+    expect(screen.queryByRole('dialog')).toBeNull()
   })
 })

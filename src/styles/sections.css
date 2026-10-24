@@ -1,9 +1,16 @@
 /* Section styles beyond the prototype's motion.css — things the prototype
    left out that the real site needs (project screenshots and links). */
 
-/* Project screenshots as small prints on the table */
+/* Project screenshots as small prints on the table; click one to enlarge */
 .row-prints{display:flex;gap:14px;flex-wrap:wrap;margin:6px 0 24px}
-.row-prints img{width:180px;height:112px;object-fit:cover;border-radius:3px;border:5px solid var(--paper);border-bottom-width:16px;box-shadow:0 16px 36px rgba(0,0,0,.5);transform:rotate(var(--r,0deg))}
+.row-print{display:block;padding:0;border:0;background:none;cursor:zoom-in;border-radius:3px;transform:rotate(var(--r,0deg));transition:transform .35s var(--ease-out)}
+.row-print:focus-visible{outline:2px solid var(--accent);outline-offset:4px}
+.row-print:active{transform:rotate(0deg) scale(.98)}
+.row-prints img{display:block;width:180px;height:112px;object-fit:cover;border-radius:3px;border:5px solid var(--paper);border-bottom-width:16px;box-shadow:0 16px 36px rgba(0,0,0,.5)}
+@media (hover:hover) and (pointer:fine){
+  .row-print:hover{transform:rotate(0deg) translateY(-4px) scale(1.04)}
+}
+@media (prefers-reduced-motion: reduce){.row-print{transition-duration:.01ms}}
 
 /* Project links: Live is the primary action, the rest are outlines */
 .row-links{display:flex;gap:10px;flex-wrap:wrap}

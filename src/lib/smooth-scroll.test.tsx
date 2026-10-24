@@ -3,6 +3,7 @@ import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { SmoothScrollProvider } from './smooth-scroll'
 import { Lightbox } from '../components/sections/Lightbox'
+import { photoSlide } from './slides'
 import type { Photo } from '../data/photos-manifest'
 
 const frame: Photo = {
@@ -32,7 +33,7 @@ describe('scroll lock', () => {
   it('does not pin the page when the lightbox is closed', () => {
     render(
       <SmoothScrollProvider>
-        <Lightbox photos={[frame]} index={null} onClose={() => {}} onChange={() => {}} />
+        <Lightbox slides={[photoSlide(frame)]} index={null} onClose={() => {}} onChange={() => {}} />
       </SmoothScrollProvider>,
     )
     expect(document.body.style.overflow).toBe('')
@@ -41,7 +42,7 @@ describe('scroll lock', () => {
   it('pins the page while the lightbox is open', () => {
     render(
       <SmoothScrollProvider>
-        <Lightbox photos={[frame]} index={0} onClose={() => {}} onChange={() => {}} />
+        <Lightbox slides={[photoSlide(frame)]} index={0} onClose={() => {}} onChange={() => {}} />
       </SmoothScrollProvider>,
     )
     expect(document.body.style.overflow).toBe('hidden')
@@ -50,7 +51,7 @@ describe('scroll lock', () => {
   it('releases the page when the lightbox unmounts', () => {
     const { unmount } = render(
       <SmoothScrollProvider>
-        <Lightbox photos={[frame]} index={0} onClose={() => {}} onChange={() => {}} />
+        <Lightbox slides={[photoSlide(frame)]} index={0} onClose={() => {}} onChange={() => {}} />
       </SmoothScrollProvider>,
     )
     expect(document.body.style.overflow).toBe('hidden')
@@ -63,7 +64,7 @@ describe('scroll lock', () => {
     function Harness() {
       return (
         <SmoothScrollProvider>
-          <Lightbox photos={[frame]} index={0} onClose={() => {}} onChange={() => {}} />
+          <Lightbox slides={[photoSlide(frame)]} index={0} onClose={() => {}} onChange={() => {}} />
         </SmoothScrollProvider>
       )
     }
@@ -73,7 +74,7 @@ describe('scroll lock', () => {
     // onClose is wired by the parent; closing is modelled by rendering index=null
     rerender(
       <SmoothScrollProvider>
-        <Lightbox photos={[frame]} index={null} onClose={() => {}} onChange={() => {}} />
+        <Lightbox slides={[photoSlide(frame)]} index={null} onClose={() => {}} onChange={() => {}} />
       </SmoothScrollProvider>,
     )
     expect(screen.queryByRole('dialog')).toBeNull()
