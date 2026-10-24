@@ -2,6 +2,7 @@ import { describe, it, expect, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { Lightbox } from './Lightbox'
+import { photoSlide } from '../../lib/slides'
 import type { Photo } from '../../data/photos-manifest'
 
 const photo = (id: string, alt: string): Photo => ({
@@ -22,22 +23,23 @@ const photo = (id: string, alt: string): Photo => ({
 })
 
 const photos: Photo[] = [photo('a', 'A'), photo('b', 'B'), photo('c', 'C')]
+const slides = photos.map(photoSlide)
 
 describe('Lightbox', () => {
   it('renders nothing when index is null', () => {
-    const { container } = render(<Lightbox photos={photos} index={null} onClose={() => {}} onChange={() => {}} />)
+    const { container } = render(<Lightbox slides={slides} index={null} onClose={() => {}} onChange={() => {}} />)
     expect(container.firstChild).toBeNull()
   })
 
   it('shows the current frame number', () => {
-    render(<Lightbox photos={photos} index={0} onClose={() => {}} onChange={() => {}} />)
+    render(<Lightbox slides={slides} index={0} onClose={() => {}} onChange={() => {}} />)
     expect(screen.getByText('01')).toBeInTheDocument()
   })
 
   it('advances with the next button', async () => {
     const user = userEvent.setup()
     const onChange = vi.fn()
-    render(<Lightbox photos={photos} index={0} onClose={() => {}} onChange={onChange} />)
+    render(<Lightbox slides={slides} index={0} onClose={() => {}} onChange={onChange} />)
     await user.click(screen.getByLabelText('Next photo'))
     expect(onChange).toHaveBeenCalledWith(1)
   })
@@ -45,7 +47,7 @@ describe('Lightbox', () => {
   it('wraps to the last frame when going previous from the first', async () => {
     const user = userEvent.setup()
     const onChange = vi.fn()
-    render(<Lightbox photos={photos} index={0} onClose={() => {}} onChange={onChange} />)
+    render(<Lightbox slides={slides} index={0} onClose={() => {}} onChange={onChange} />)
     await user.click(screen.getByLabelText('Previous photo'))
     expect(onChange).toHaveBeenCalledWith(2)
   })
@@ -53,14 +55,14 @@ describe('Lightbox', () => {
   it('closes on Escape', async () => {
     const user = userEvent.setup()
     const onClose = vi.fn()
-    render(<Lightbox photos={photos} index={1} onClose={onClose} onChange={() => {}} />)
+    render(<Lightbox slides={slides} index={1} onClose={onClose} onChange={() => {}} />)
     await user.keyboard('{Escape}')
     expect(onClose).toHaveBeenCalled()
   })
 
   it('Tab keeps focus within the dialog', async () => {
     const user = userEvent.setup()
-    render(<Lightbox photos={photos} index={0} onClose={() => {}} onChange={() => {}} />)
+    render(<Lightbox slides={slides} index={0} onClose={() => {}} onChange={() => {}} />)
     const dialog = document.querySelector('[role="dialog"]') as HTMLElement
     const buttons = Array.from(dialog.querySelectorAll('button')) as HTMLElement[]
     expect(buttons.length).toBeGreaterThan(0)
@@ -71,20 +73,20 @@ describe('Lightbox', () => {
   })
 
   it('shows place, year, camera and lens for the open frame', () => {
-    render(<Lightbox photos={photos} index={0} onClose={() => {}} onChange={() => {}} />)
+    render(<Lightbox slides={slides} index={0} onClose={() => {}} onChange={() => {}} />)
     expect(screen.getByText(/Venice, 2023/)).toBeInTheDocument()
     expect(screen.getByText(/Fujifilm X-T4/)).toBeInTheDocument()
     expect(screen.getByText(/XF16-55mmF2\.8/)).toBeInTheDocument()
   })
 
   it('loads a derivative rather than an original', () => {
-    render(<Lightbox photos={photos} index={0} onClose={() => {}} onChange={() => {}} />)
+    render(<Lightbox slides={slides} index={0} onClose={() => {}} onChange={() => {}} />)
     const img = screen.getByAltText('A') as HTMLImageElement
     expect(img.getAttribute('src')).toContain('-1600.jpg')
   })
 
   it('shows the exposure (focal length, aperture, ISO)', () => {
-    render(<Lightbox photos={photos} index={0} onClose={() => {}} onChange={() => {}} />)
+    render(<Lightbox slides={slides} index={0} onClose={() => {}} onChange={() => {}} />)
     expect(screen.getByText('23mm · f/2.8 · ISO 200')).toBeInTheDocument()
   })
 
@@ -94,16 +96,16 @@ describe('Lightbox', () => {
     tile.append(tileImg)
     document.body.append(tile)
     const originFor = () => tile
-    const { rerender } = render(<Lightbox photos={photos} index={0} onClose={() => {}} onChange={() => {}} originFor={originFor} />)
+    const { rerender } = render(<Lightbox slides={slides} index={0} onClose={() => {}} onChange={() => {}} originFor={originFor} />)
     expect(tileImg.style.visibility).toBe('hidden')
-    rerender(<Lightbox photos={photos} index={null} onClose={() => {}} onChange={() => {}} originFor={originFor} />)
+    rerender(<Lightbox slides={slides} index={null} onClose={() => {}} onChange={() => {}} originFor={originFor} />)
     expect(tileImg.style.visibility).toBe('')
     tile.remove()
   })
 
   it('falls back to the largest width a narrow photo actually has', () => {
     const narrow: Photo = { ...photo('n', 'N'), w: 1440, h: 960, widths: [400, 800, 1200] }
-    render(<Lightbox photos={[narrow]} index={0} onClose={() => {}} onChange={() => {}} />)
+    render(<Lightbox slides={[photoSlide(narrow)]} index={0} onClose={() => {}} onChange={() => {}} />)
     const img = screen.getByAltText('N') as HTMLImageElement
     expect(img.getAttribute('src')).toContain('-1200.jpg')
     expect(img.getAttribute('src')).not.toContain('-1600')

@@ -4,7 +4,7 @@ import { photos } from './photos-manifest'
 
 describe('derived stats', () => {
   it('counts all projects', () => {
-    expect(stats.projects).toBe(6)
+    expect(stats.projects).toBe(7)
   })
   it('counts active projects', () => {
     expect(stats.active).toBe(4)

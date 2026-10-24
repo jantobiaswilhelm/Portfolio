@@ -1,12 +1,22 @@
-import { useLayoutEffect, useRef, useState, type CSSProperties } from 'react'
+import { useCallback, useLayoutEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
+import { Lightbox } from './Lightbox'
+import type { Slide } from '../../lib/slides'
 import { Split } from '../../motion/Split'
 import { reveal } from '../../motion/reveal'
 import { useTick, S } from '../../motion/ticker'
 import { FINE, RM, clamp, pad2 } from '../../motion/env'
-import { projects, type Project } from '../../data/projects'
+import { projects, type Preview, type Project } from '../../data/projects'
 import '../../styles/sections.css'
 
 const BASE = import.meta.env.BASE_URL
+
+const previewSlide = (shot: Preview): Slide => ({
+  src: `${BASE}${shot.full ?? shot.src}`,
+  w: shot.w,
+  h: shot.h,
+  alt: shot.caption,
+  lines: [shot.caption],
+})
 
 function links(p: Project): { label: string; href: string; primary: boolean }[] {
   const out: { label: string; href: string; primary: boolean }[] = []
@@ -50,14 +60,24 @@ export function Projects() {
   const pvRef = useRef<HTMLDivElement>(null)
   const [pvIndex, setPvIndex] = useState(0)
   const pv = useRef({ x: 0, y: 0, r: 0, shown: false, fresh: true })
+  // Lightbox over one project's screenshots: which project, which shot.
+  const [shot, setShot] = useState<{ p: number; i: number } | null>(null)
+  const prints = useRef(new Map<string, HTMLButtonElement>())
+  // Keyed on the project alone, so stepping between shots keeps both stable.
+  const shotP = shot?.p ?? null
+  const slides = useMemo(() => (shotP === null ? [] : projects[shotP].previews.map(previewSlide)), [shotP])
+  const originFor = useCallback((i: number) => prints.current.get(`${shotP}:${i}`) ?? null, [shotP])
 
   // Tween each body from its current height, so rapid toggles never jump.
+  // `.open` is toggled here rather than through className: a React-owned
+  // className would wipe the `.in` that reveal() adds, hiding the row.
   useLayoutEffect(() => {
     bodies.current.forEach((body, i) => {
       if (!body) return
       const want = openIndex === i
       if ((body.dataset.open === '1') === want) return
       body.dataset.open = want ? '1' : '0'
+      body.parentElement?.classList.toggle('open', want)
       body.style.height = getComputedStyle(body).height
       void body.offsetHeight // commit the start value
       body.style.height = want ? `${body.scrollHeight}px` : '0px'
@@ -112,7 +132,7 @@ export function Projects() {
             return (
               <div
                 key={p.title}
-                className={`row${open ? ' open' : ''}`}
+                className="row"
                 data-reveal
                 ref={reveal}
                 style={{ '--d': `${i * 60}ms` } as CSSProperties}
@@ -141,6 +161,9 @@ export function Projects() {
                   aria-label={p.title}
                   aria-hidden={!open}
                   ref={(el) => { bodies.current[i] = el }}
+                  // the trailing preview card would sit on top of the prints you're reaching for
+                  onPointerEnter={onListLeave}
+                  onPointerLeave={() => onRowEnter(i)}
                 >
                   <div className="row-body-in">
                     <p className="ac" style={{ '--i': k++ } as CSSProperties}>{p.description}</p>
@@ -150,14 +173,19 @@ export function Projects() {
                     </ul>
                     {p.previews.length > 0 && (
                       <div className="row-prints ac" style={{ '--i': k++ } as CSSProperties}>
-                        {p.previews.map((shot, j) => (
-                          <img
-                            key={shot.src}
-                            src={`${BASE}${shot.src}`}
-                            alt={shot.caption}
-                            loading="lazy"
+                        {p.previews.map((pre, j) => (
+                          <button
+                            key={pre.src}
+                            className="row-print"
+                            data-cursor="link"
+                            aria-label={`Enlarge screenshot: ${pre.caption}`}
+                            tabIndex={open ? undefined : -1}
+                            onClick={() => setShot({ p: i, i: j })}
+                            ref={(el) => { if (el) prints.current.set(`${i}:${j}`, el); else prints.current.delete(`${i}:${j}`) }}
                             style={{ '--r': `${[-2.5, 1.8, -1.2][j % 3]}deg` } as CSSProperties}
-                          />
+                          >
+                            <img src={`${BASE}${pre.src}`} alt={pre.caption} loading="lazy" />
+                          </button>
                         ))}
                       </div>
                     )}
@@ -204,6 +232,16 @@ export function Projects() {
           </div>
         </div>
       )}
+
+      <Lightbox
+        slides={slides}
+        index={shot?.i ?? null}
+        onClose={() => setShot(null)}
+        onChange={(j) => setShot((s) => (s ? { ...s, i: j } : s))}
+        originFor={originFor}
+        noun="screenshot"
+        counter={shotP === null ? '' : projects[shotP].title}
+      />
     </section>
   )
 }

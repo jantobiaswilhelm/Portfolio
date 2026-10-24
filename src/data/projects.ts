@@ -1,4 +1,12 @@
-export type Preview = { src: string; caption: string }
+export interface Preview {
+  /** Shown in the row and the hover card. */
+  src: string
+  caption: string
+  w: number
+  h: number
+  /** Larger file for the lightbox; falls back to `src`. */
+  full?: string
+}
 
 export interface Project {
   title: string
@@ -37,25 +45,34 @@ export const projects: Project[] = [
       'End-to-end pipeline: brief → match → invite → screen → schedule → conduct → feedback → report',
     ],
     featured: true,
-    previews: [],
+    previews: [
+      { src: 'images/projects/cxlab-1-sm.webp', full: 'images/projects/cxlab-1.webp', w: 2880, h: 1800, caption: 'Dashboard with the recruitment orchestrator' },
+      { src: 'images/projects/cxlab-2-sm.webp', full: 'images/projects/cxlab-2.webp', w: 2880, h: 1800, caption: 'Participation pipeline and the Smart Matcher’s ranked candidates' },
+      { src: 'images/projects/cxlab-3-sm.webp', full: 'images/projects/cxlab-3.webp', w: 2880, h: 1800, caption: 'Session calendar across active studies' },
+    ],
   },
   {
     title: 'Lutem',
     hue: 265,
-    tagline: '"Headspace meets Steam"',
-    year: '2025',
+    tagline: 'A game diary that knows how games make you feel',
+    year: '2026',
     current: true,
-    description: 'AI-powered gaming recommendation platform that matches your mood to the perfect game. Built as part of my Master\'s coursework with startup potential.',
-    stack: ['React', 'TypeScript', 'Spring Boot', 'Firebase', 'PostgreSQL', 'Tailwind'],
-    live: 'https://lutemweb.netlify.app',
-    github: 'https://github.com/jantobiaswilhelm/LutemPrototype',
+    description: 'A game diary with a recommendation engine built in. You log what you play, and after a session a two-tap check-in records how it left you: relaxed, energized, absorbed, frustrated, drained. Those check-ins feed "Play tonight": say how you want to feel and how much time you have, and it picks from your own games with a reason drawn from your history. Lutem started in my Master\'s coursework as a Spring Boot + React prototype; in 2026 I rebuilt it from scratch as a mobile-first Next.js app on Supabase, and I\'m currently building the recommendation engine.',
+    stack: ['Next.js', 'TypeScript', 'Supabase', 'Tailwind', 'PostgreSQL', 'IGDB API', 'Claude API'],
     document: 'docs/lutem-project.pdf',
-    highlights: ['Multi-dimensional recommendation engine', 'Steam library integration', '4 themes × 2 modes design system'],
+    highlights: [
+      'Two-tap session check-ins: how a game left you, not just a star rating',
+      'Game pages that aggregate how a game feels from everyone\'s check-ins',
+      '"Play tonight": a mood plus your free time, picked from your own library (in progress)',
+      'Emotional tags drafted by Claude on first log, gradually replaced by real check-ins',
+      '"Calm Journal" design system with a colour per mood and a "Dusk" dark mode',
+      'Postgres row-level security, a local Supabase stack, Vitest and Playwright tests',
+    ],
     featured: true,
     previews: [
-      { src: 'images/projects/lutem-1.png', caption: 'Mood selection interface' },
-      { src: 'images/projects/lutem-2.png', caption: 'Game recommendations' },
-      { src: 'images/projects/lutem-3.png', caption: 'Theme variants' },
+      { src: 'images/projects/lutem-1-sm.webp', full: 'images/projects/lutem-1.webp', w: 2880, h: 1800, caption: 'Mood picker, the two-tap check-in, and how a game feels' },
+      { src: 'images/projects/lutem-2-sm.webp', full: 'images/projects/lutem-2.webp', w: 2880, h: 1800, caption: 'The same flow in Dusk, the dark theme, with the diary of check-ins' },
+      { src: 'images/projects/lutem-3-sm.webp', full: 'images/projects/lutem-3.webp', w: 2880, h: 1800, caption: 'Game page on desktop: ratings, feelings from check-ins, and tags' },
     ],
   },
   {
@@ -69,7 +86,33 @@ export const projects: Project[] = [
     live: 'https://chromewebstore.google.com/detail/netflixrating/gefngcjodmnmgkfnjmlidofjcpjhmodm',
     highlights: ['Multi-source ratings: IMDb, Rotten Tomatoes, Letterboxd', 'Two-tier caching with request deduplication', 'Watched tracking with visual indicators', 'Genre page sorting by rating source', 'SPA-aware DOM observation with IntersectionObserver'],
     featured: false,
-    previews: [],
+    previews: [
+      { src: 'images/projects/netflixrating-1-sm.webp', full: 'images/projects/netflixrating-1.webp', w: 1280, h: 800, caption: 'Ratings under every title on Netflix’s browse rows' },
+      { src: 'images/projects/netflixrating-2-sm.webp', full: 'images/projects/netflixrating-2.webp', w: 2880, h: 1800, caption: 'Settings popup: rating sources, display style, API usage and cache' },
+    ],
+  },
+  {
+    title: 'Garderobe',
+    hue: 345,
+    tagline: 'A virtual closet and AI try-on studio',
+    year: '2026',
+    current: false,
+    description: 'A personal closet and try-on studio. You photograph a piece of clothing and Garderobe cuts it out right in the browser, then Gemini names it, files it under a category and type, and picks out its colour. Pieces can also be lifted straight out of a shop photo of someone wearing them. In the Studio you choose up to six pieces and Gemini renders them as one outfit on a full-body photo of you, keeping your face, hair and pose, so you can see a look before you get dressed. Single user, German and English.',
+    stack: ['Next.js 15', 'React 19', 'TypeScript', 'Supabase', 'Gemini API', 'ONNX / WebAssembly'],
+    highlights: [
+      'In-browser background removal (ONNX on WebAssembly): free, and the photo never leaves the device',
+      'Gemini auto-tagging: name, category, sub-type and dominant colour, all editable',
+      '"Ghost-mannequin" extraction pulls a single garment out of a worn or shop photo',
+      'Identity-preserving try-on renders, where a dress replaces top and bottoms rather than stacking',
+      'Lookbook of saved renders with zoom, native share sheet and download',
+      'Hand-written CSS, bilingual German / English, optional shared-password gate',
+    ],
+    featured: false,
+    previews: [
+      { src: 'images/projects/garderobe-1-sm.webp', full: 'images/projects/garderobe-1.webp', w: 2880, h: 1800, caption: 'The closet: every piece cut out and tagged automatically' },
+      { src: 'images/projects/garderobe-2-sm.webp', full: 'images/projects/garderobe-2.webp', w: 2880, h: 1800, caption: 'The studio: your photo is the canvas, the closet is the palette' },
+      { src: 'images/projects/garderobe-3-sm.webp', full: 'images/projects/garderobe-3.webp', w: 2880, h: 1800, caption: 'Two pieces picked, ready to try on, with an optional clean studio backdrop' },
+    ],
   },
   {
     title: 'MovieNight',
@@ -81,7 +124,12 @@ export const projects: Project[] = [
     stack: ['React', 'Express.js', 'Discord.js', 'PostgreSQL', 'TMDB API', 'JWT', 'Vite'],
     highlights: ['Three-service architecture: web app, REST API, and Discord bot', 'TMDB-powered movie search with trailers and recommendations', 'Voting system with real-time progress tracking', 'Personal wishlists with random movie picker', 'Discord OAuth2 authentication'],
     featured: false,
-    previews: [],
+    previews: [
+      { src: 'images/projects/movienight-1-sm.webp', full: 'images/projects/movienight-1.webp', w: 2880, h: 1800, caption: 'Tonight’s screening, the suggestion board, and what’s coming up' },
+      { src: 'images/projects/movienight-2-sm.webp', full: 'images/projects/movienight-2.webp', w: 2880, h: 1800, caption: 'The archive of every film the server has watched' },
+      { src: 'images/projects/movienight-3-sm.webp', full: 'images/projects/movienight-3.webp', w: 2880, h: 1800, caption: 'A marathon that schedules its films one Saturday at a time' },
+      { src: 'images/projects/movienight-4-sm.webp', full: 'images/projects/movienight-4.webp', w: 2880, h: 1800, caption: 'Stats: the club’s top-rated films, ratings and hours in the dark' },
+    ],
   },
   {
     title: 'SQL Scrolls Public Release',
@@ -97,8 +145,8 @@ export const projects: Project[] = [
     highlights: ['Extended game with new tasks & UI improvements', 'Simplified deployment via Docker', 'Migrated project from GitLab to GitHub', 'Created documentation & video tutorials', 'Test plan execution & bugfixing'],
     featured: false,
     previews: [
-      { src: 'images/projects/sqlscrolls-1.png', caption: 'Game interface' },
-      { src: 'images/projects/sqlscrolls-2.png', caption: 'SQL challenge' },
+      { src: 'images/projects/sqlscrolls-1.png', w: 2047, h: 1101, caption: 'Game interface' },
+      { src: 'images/projects/sqlscrolls-2.png', w: 728, h: 427, caption: 'SQL challenge' },
     ],
   },
   {

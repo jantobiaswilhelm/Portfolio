@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
 import { Lightbox } from './Lightbox'
+import { photoSlide } from '../../lib/slides'
 import { COLUMN_SPEEDS, columnCount, distribute } from '../../lib/columns'
 import { aspectOf, photoSrcSet, photoUrl, photos, type Photo } from '../../data/photos-manifest'
 import { RM, clamp } from '../../motion/env'
@@ -39,6 +40,7 @@ export function Photography({ items = photos }: { items?: Photo[] } = {}) {
   }, [])
 
   const columns = useMemo(() => distribute(items, cols, aspectOf), [items, cols])
+  const slides = useMemo(() => items.map(photoSlide), [items])
 
   // Develop each frame from paper as it arrives; arrivals close together share one stagger.
   useEffect(() => {
@@ -134,7 +136,7 @@ export function Photography({ items = photos }: { items?: Photo[] } = {}) {
         </div>
       </div>
 
-      <Lightbox photos={items} index={index} onClose={() => setIndex(null)} onChange={setIndex} originFor={originFor} />
+      <Lightbox slides={slides} index={index} onClose={() => setIndex(null)} onChange={setIndex} originFor={originFor} />
     </section>
   )
 }
